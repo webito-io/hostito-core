@@ -11,9 +11,10 @@ import { ProductsModule } from './modules/products/products.module';
 import { ServersModule } from './modules/servers/servers.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
 import { UsersModule } from './modules/users/users.module';
+import { RolesModule } from './modules/roles/roles.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule, InvoicesModule, PaymentsModule, TicketsModule, ServersModule, NotificationsModule, PrismaModule],
+  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule, InvoicesModule, PaymentsModule, TicketsModule, ServersModule, NotificationsModule, PrismaModule, RolesModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -1,7 +1,6 @@
-import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from './auth.guard';
-import { requireRole } from '../../common/decorators/role.decorator';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -39,7 +38,6 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  @requireRole('user')
   getMe(@Req() req) {
     return this.authService.getMe(req.user);
   }

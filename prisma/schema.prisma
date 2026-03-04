@@ -19,20 +19,35 @@ model User {
   password  String
   firstName String?
   lastName  String?
-  role      Role     @default(CLIENT)
+  role      Role    @relation(fields: [roleId], references: [id])
+  roleId    Int
   status    Status   @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-enum Role {
-  ADMIN
-  CLIENT
-  RESELLER
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
+  id       Int    @id @default(autoincrement())
+  resource String
+  action   String
+  scope    String
+  roles    Role[]
+
+  @@unique([resource, action, scope])
 }
 
 enum Status {
   ACTIVE
   SUSPENDED
+  BLOCKED
   CANCELLED
 }
