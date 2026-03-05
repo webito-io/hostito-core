@@ -12,8 +12,12 @@ export class AuthService {
 
     async register(email: string, password: string, firstName?: string, lastName?: string) {
         const hashed = await bcrypt.hash(password, 10);
+        /* Create organization if it doesn't exist */
+        const organization = await this.prisma.organization.create({
+            data: { name: `${lastName ?? ''} Organization`, currency: { connect: { id: 1 } } },
+        });
         const user = await this.prisma.user.create({
-            data: { email, password: hashed, firstName, lastName, roleId: 100 },
+            data: { email, password: hashed, firstName, lastName, role: { connect: { id: 100 } }, organization: { connect: { id: organization.id } } },
         });
         return this.signToken(user.id, user.email, user.roleId);
     }
@@ -54,7 +58,7 @@ export class AuthService {
         // TODO: Implement email verification logic
         throw new Error('Not implemented');
     }
-    
+
     async resendVerificationEmail(email: string) {
         // TODO: Implement resend verification email logic
         throw new Error('Not implemented');
