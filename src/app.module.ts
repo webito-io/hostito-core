@@ -20,9 +20,10 @@ import { CouponsModule } from './modules/coupons/coupons.module';
 import { AnnouncementsModule } from './modules/announcements/announcements.module';
 import { EmailTemplatesModule } from './modules/email-templates/email-templates.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
+import { CurrenciesModule } from './modules/currencies/currencies.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule, InvoicesModule, PaymentsModule, TicketsModule, ServersModule, NotificationsModule, PrismaModule, RolesModule, ServicesModule, OrganizationsModule, DomainsModule, TaxesModule, CouponsModule, AnnouncementsModule, EmailTemplatesModule, AuditLogsModule],
+  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule, InvoicesModule, PaymentsModule, TicketsModule, ServersModule, NotificationsModule, PrismaModule, RolesModule, ServicesModule, OrganizationsModule, DomainsModule, TaxesModule, CouponsModule, AnnouncementsModule, EmailTemplatesModule, AuditLogsModule, CurrenciesModule],
   controllers: [AppController],
   providers: [AppService],
 })

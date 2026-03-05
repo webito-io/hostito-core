@@ -14,6 +14,6 @@ export function setupSwagger(app: INestApplication) {
 
   app.use('/api', apiReference({
     spec: { content: document },
-    theme: 'saturn',
+    theme: 'kepler',
   }));
 }

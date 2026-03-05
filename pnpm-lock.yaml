@@ -53,6 +53,9 @@ importers:
       node-mailer:
         specifier: ^0.1.1
         version: 0.1.1
+      nodemailer:
+        specifier: ^8.0.1
+        version: 8.0.1
       passport:
         specifier: ^0.7.0
         version: 0.7.0
