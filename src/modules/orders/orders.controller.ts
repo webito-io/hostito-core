@@ -12,6 +12,11 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto);
   }
 
+  @Post('checkout')
+  checkout(@Body() createOrderDto: CreateOrderDto) {
+    //return this.ordersService.checkout(createOrderDto);
+  }
+
   @Get()
   findAll() {
     return this.ordersService.findAll();

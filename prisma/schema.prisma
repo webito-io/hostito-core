@@ -71,6 +71,7 @@ model Organization {
   domains  Domain[]
   services Service[]
   tickets Ticket[]
+  carts Cart[]
   auditLogs AuditLog[]
   currency   Currency @relation(fields: [currencyId], references: [id])
   currencyId Int
@@ -124,6 +125,28 @@ model OrderItem {
   product     Product  @relation(fields: [productId], references: [id])
   productId   Int
   createdAt   DateTime @default(now())
+}
+
+
+model Cart {
+  id             Int        @id @default(autoincrement())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId Int        @unique
+  items          CartItem[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  cartId    Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  config    Json?    // { domain: 'example.com', os: 'ubuntu' }
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Invoice {
@@ -226,6 +249,7 @@ model Product {
   module      String?
   config      Json?
   services    Service[]
+  cartItems   CartItem[]
   orderItems  OrderItem[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt

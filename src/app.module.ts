@@ -21,9 +21,10 @@ import { AnnouncementsModule } from './modules/announcements/announcements.modul
 import { EmailTemplatesModule } from './modules/email-templates/email-templates.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
+import { CartsModule } from './modules/carts/carts.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule, InvoicesModule, PaymentsModule, TicketsModule, ServersModule, NotificationsModule, PrismaModule, RolesModule, ServicesModule, OrganizationsModule, DomainsModule, TaxesModule, CouponsModule, AnnouncementsModule, EmailTemplatesModule, AuditLogsModule, CurrenciesModule],
+  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule, InvoicesModule, PaymentsModule, TicketsModule, ServersModule, NotificationsModule, PrismaModule, RolesModule, ServicesModule, OrganizationsModule, DomainsModule, TaxesModule, CouponsModule, AnnouncementsModule, EmailTemplatesModule, AuditLogsModule, CurrenciesModule, CartsModule],
   controllers: [AppController],
   providers: [AppService],
 })
