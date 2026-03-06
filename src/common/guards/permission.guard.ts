@@ -8,7 +8,7 @@ export class PermissionsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private prisma: PrismaService,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const required = this.reflector.get(PERMISSION_KEY, context.getHandler());
@@ -32,6 +32,9 @@ export class PermissionsGuard implements CanActivate {
     );
 
     if (!has) throw new ForbiddenException('Access denied');
+
+    const request = context.switchToHttp().getRequest();
+    request.user.role = role;
     return true;
   }
 }

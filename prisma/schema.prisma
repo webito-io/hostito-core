@@ -19,6 +19,7 @@ model User {
   password  String
   firstName String?
   lastName  String?
+  phone     String?  @unique
   role      Role    @relation(fields: [roleId], references: [id])
   roleId    Int
   organization   Organization @relation(fields: [organizationId], references: [id])
@@ -26,6 +27,10 @@ model User {
   ticketReplies TicketReply[]
   auditLogs AuditLog[]
   status    Status   @default(ACTIVE)
+  emailVerified       Boolean   @default(false)
+  verificationToken   String?
+  resetPasswordToken  String?
+  resetPasswordExpiry DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

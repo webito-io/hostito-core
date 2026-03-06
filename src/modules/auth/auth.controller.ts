@@ -34,7 +34,6 @@ export class AuthController {
   }
 
   @Post('resend-verification-email')
-  @ApiBearerAuth()
   resendVerificationEmail(@Body() body: ResendVerificationEmailDto) {
     return this.authService.resendVerificationEmail(body.email);
   }

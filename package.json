@@ -1,11 +1,12 @@
 {
-  "name": "krako-backend",
+  "name": "hostito-core",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Open source hosting billing & management system — WHMCS alternative",
+  "author": "Alireza Mohagheghi",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
+    "prepare": "npx prisma generate && npx prisma migrate dev",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
