@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CouponsCalculator } from '../coupons/coupons.calculator';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,7 +13,7 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly couponsCalculator: CouponsCalculator,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   /**
    * Checkout the cart
@@ -53,7 +53,6 @@ export class OrdersService {
       let total = 0;
       let discount = 0;
       let tax = 0;
-      let orderItems = cartItems;
       const orderItemsWithProduct: any[] = [];
 
       for (const item of cartItems) {
@@ -70,18 +69,16 @@ export class OrdersService {
             unitPrice: product.price,
             total: product.price * item.quantity,
           });
-        } else {
-          orderItems = orderItems.filter((i) => i.productId !== item.productId);
         }
       }
 
       /* Apply coupon */
       const coupon = createOrderDto.coupon
         ? await prisma.coupon.findUnique({
-            where: {
-              code: createOrderDto.coupon,
-            },
-          })
+          where: {
+            code: createOrderDto.coupon,
+          },
+        })
         : null;
       if (coupon) {
         const couponDiscount = await this.couponsCalculator.calculateDiscount(
@@ -158,10 +155,7 @@ export class OrdersService {
           orderId: order.id,
           items: {
             create: orderItemsWithProduct.map((item) => ({
-              description:
-                typeof item.config === 'string'
-                  ? item.config
-                  : JSON.stringify(item.config ?? {}),
+              description: JSON.stringify(item.config ?? {}),
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               total: item.total,
@@ -288,7 +282,7 @@ export class OrdersService {
 
       await prisma.orderItem.deleteMany({ where: { orderId: id } });
 
-      if (order.couponId) {
+      if (order.couponId && order.discount > 0) {
         await prisma.coupon.update({
           where: { id: order.couponId },
           data: { usedCount: { decrement: 1 } },
