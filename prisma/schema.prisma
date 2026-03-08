@@ -165,8 +165,8 @@ model Invoice {
   currencyId Int
   transactions Transaction[]
   items InvoiceItem[]
-  order   Order @relation(fields: [orderId], references: [id])
-  orderId Int
+  order   Order? @relation(fields: [orderId], references: [id])
+  orderId Int?
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId Int
   dueDate DateTime?

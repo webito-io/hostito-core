@@ -46,7 +46,8 @@ export class CouponsService {
         value: updateCouponDto.value,
         currencyId: updateCouponDto.currencyId,
         maxUses: updateCouponDto.maxUses,
-        expiresAt: updateCouponDto.expiresAt && new Date(updateCouponDto.expiresAt),
+        expiresAt:
+          updateCouponDto.expiresAt && new Date(updateCouponDto.expiresAt),
         isActive: updateCouponDto.isActive,
       },
     });

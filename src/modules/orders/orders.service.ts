@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CouponsCalculator } from '../coupons/coupons.calculator';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,7 +17,7 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly couponsCalculator: CouponsCalculator,
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   /**
    * Checkout the cart
@@ -75,10 +79,10 @@ export class OrdersService {
       /* Apply coupon */
       const coupon = createOrderDto.coupon
         ? await prisma.coupon.findUnique({
-          where: {
-            code: createOrderDto.coupon,
-          },
-        })
+            where: {
+              code: createOrderDto.coupon,
+            },
+          })
         : null;
       if (coupon) {
         const couponDiscount = await this.couponsCalculator.calculateDiscount(
