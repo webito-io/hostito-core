@@ -15,9 +15,7 @@ export class CouponsService {
         value: createCouponDto.value,
         currencyId: createCouponDto.currencyId,
         maxUses: createCouponDto.maxUses,
-        expiresAt: createCouponDto.expiresAt
-          ? new Date(createCouponDto.expiresAt)
-          : null,
+        expiresAt: createCouponDto.expiresAt && new Date(createCouponDto.expiresAt),
         isActive: createCouponDto.isActive ?? true,
       },
     });
@@ -46,8 +44,7 @@ export class CouponsService {
         value: updateCouponDto.value,
         currencyId: updateCouponDto.currencyId,
         maxUses: updateCouponDto.maxUses,
-        expiresAt:
-          updateCouponDto.expiresAt && new Date(updateCouponDto.expiresAt),
+        expiresAt: updateCouponDto.expiresAt && new Date(updateCouponDto.expiresAt),
         isActive: updateCouponDto.isActive,
       },
     });
