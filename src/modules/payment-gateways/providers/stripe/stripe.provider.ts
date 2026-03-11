@@ -43,6 +43,7 @@ export class StripeProvider {
     });
 
     return {
+      status: session.status === 'open',
       url: session.url,
       sessionId: session.id
     };

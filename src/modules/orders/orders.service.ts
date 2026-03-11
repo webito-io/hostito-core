@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException
 } from '@nestjs/common';
@@ -6,6 +7,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InvoiceStatus, User } from 'generated/prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { CouponsCalculator } from '../coupons/coupons.calculator';
+import { CurrenciesCalculator } from '../currencies/currencies.calculator';
 import { PaymentGatewaysHandler } from '../payment-gateways/payment-gateways.handler';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -18,6 +20,7 @@ export class OrdersService {
     private readonly couponsCalculator: CouponsCalculator,
     private readonly eventEmitter: EventEmitter2,
     private readonly paymentGatewaysHandler: PaymentGatewaysHandler,
+    private readonly currencyConverter: CurrenciesCalculator,
   ) { }
 
   /**
@@ -36,19 +39,21 @@ export class OrdersService {
         throw new NotFoundException('Organization not found');
       }
 
-      const cart = await prisma.cart.findUnique({
+      const cart = await prisma.cart.update({
         where: {
           organizationId: organization.id,
+          status: 'ACTIVE',
         },
+        data: {
+          status: 'PROCESSING',
+        }
       });
-      if (!cart) {
-        throw new NotFoundException('Cart not found');
-      }
 
       const cartItems = await prisma.cartItem.findMany({
         where: {
           cartId: cart.id,
         },
+
       });
       if (!cartItems.length) {
         throw new NotFoundException('Cart is empty');
@@ -60,21 +65,44 @@ export class OrdersService {
       let tax = 0;
       const orderItemsWithProduct: any[] = [];
 
-      for (const item of cartItems) {
-        const product = await prisma.product.findUnique({
-          where: {
-            id: item.productId,
+
+      const productIds = cartItems.map((item) => item.productId);
+      const products = await prisma.product.findMany({
+        where: {
+          id: {
+            in: productIds,
           },
-        });
-        if (product) {
-          subtotal += product.price * item.quantity;
-          total += product.price * item.quantity;
-          orderItemsWithProduct.push({
-            ...item,
-            unitPrice: product.price,
-            total: product.price * item.quantity,
-          });
+        },
+      });
+
+      for (const item of cartItems) {
+
+        /* product validation */
+        const product = products.find((product) => product.id === item.productId);
+        if (!product) {
+          throw new BadRequestException(`Product #${item.productId} is no longer available`);
         }
+        if (!product.isActive) {
+          throw new BadRequestException(`Product "${product.name}" is not active`);
+        }
+
+        /* product price in new currency */
+        const productPriceInNewCurrency = await this.currencyConverter.convert(
+          product.price,
+          product.currencyId,
+          organization.currencyId,
+        );
+
+        /* subtotal and total */
+        subtotal += productPriceInNewCurrency * item.quantity;
+        total += productPriceInNewCurrency * item.quantity;
+
+        /* order items with product */
+        orderItemsWithProduct.push({
+          ...item,
+          unitPrice: productPriceInNewCurrency,
+          total: productPriceInNewCurrency * item.quantity,
+        });
       }
 
       /* Apply coupon */
@@ -144,6 +172,16 @@ export class OrdersService {
         },
       });
 
+      /* Update cart status to active */
+      await prisma.cart.update({
+        where: {
+          id: cart.id,
+        },
+        data: {
+          status: 'ACTIVE',
+        }
+      });
+
       /* Invoice Creation */
       const invoice = await prisma.invoice.create({
         data: {
@@ -181,30 +219,76 @@ export class OrdersService {
         },
       });
 
-
-      /* If the invoice is marked as PENDING, create a payment transaction */
-      let payment;
-      if (invoice.status === InvoiceStatus.PENDING) {
-        payment = await this.paymentGatewaysHandler.create({
-          amount: invoice.total,
-          currencyId: invoice.currencyId,
-          transactionId: transaction.id,
-          gatewayId: createOrderDto.gatewayId,
-        });
-      }
-
       return {
         order,
         invoice,
-        payment,
-        transaction,
-        totals: { subtotal, discount, tax, total },
+        transaction
       };
     });
 
     this.eventEmitter.emit('order.created', result.order);
 
-    return result;
+    /* If the invoice is marked as PENDING, create a payment transaction */
+    let payment;
+    if (result.invoice.status === InvoiceStatus.PENDING) {
+      payment = await this.paymentGatewaysHandler.create({
+        amount: result.invoice.total,
+        currencyId: result.invoice.currencyId,
+        transactionId: result.transaction.id,
+        gatewayId: createOrderDto.gatewayId,
+      });
+    }
+
+    return {
+      ...result,
+      payment,
+    };
+  }
+
+  async pay(id: number, user: User) {
+    const order = await this.prisma.order.findUnique({
+      where: {
+        id,
+        organizationId: user.organizationId,
+      },
+    });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const invoice = await this.prisma.invoice.findFirst({
+      where: {
+        orderId: order.id,
+        status: InvoiceStatus.PENDING,
+      },
+    });
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+
+    const transaction = await this.prisma.transaction.findFirst({
+      where: {
+        invoiceId: invoice.id,
+        status: 'PENDING',
+      },
+    });
+    if (!transaction || !transaction.gatewayId) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    const payment = await this.paymentGatewaysHandler.create({
+      amount: invoice.total,
+      currencyId: invoice.currencyId,
+      transactionId: transaction.id,
+      gatewayId: transaction.gatewayId,
+    });
+
+    return {
+      order,
+      invoice,
+      transaction,
+      payment
+    };
   }
 
   async findAll(page: number, limit: number, user: User) {

@@ -5,7 +5,7 @@ export class CryptoProvider {
 
     async initiate({ gateway, amount, currency, transactionId }: { gateway: PaymentGateway, amount: number, currency: string, transactionId: number }) {
         return {
-            status: 'initiated',
+            status: true,
             amount,
             currency,
             transactionId,

@@ -136,9 +136,15 @@ model Cart {
   id             Int        @id @default(autoincrement())
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId Int        @unique
+  status         CartStatus @default(ACTIVE)
   items          CartItem[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+}
+
+enum CartStatus {
+  ACTIVE
+  PROCESSING
 }
 
 model CartItem {

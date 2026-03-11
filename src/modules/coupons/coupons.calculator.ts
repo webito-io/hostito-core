@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Coupon } from 'generated/prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { CurrenciesCalculator } from '../currencies/currencies.calculator';
 
 @Injectable()
 export class CouponsCalculator {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly currencyConverter: CurrenciesCalculator,
+  ) { }
 
   /**
    * Calculate the discount amount for a coupon
@@ -40,16 +42,11 @@ export class CouponsCalculator {
       let amount = coupon.value;
 
       if (coupon.currencyId && coupon.currencyId !== currencyId) {
-        const currency = await this.prisma.currency.findUnique({
-          where: { id: coupon.currencyId },
-        });
-        const currentCurrency = await this.prisma.currency.findUnique({
-          where: { id: currencyId },
-        });
-        if (!currency || !currentCurrency) {
-          return 0;
-        }
-        amount = (coupon.value * currency.rate) / currentCurrency.rate;
+        amount = await this.currencyConverter.convert(
+          coupon.value,
+          coupon.currencyId,
+          currencyId,
+        );
       }
 
       return Math.min(amount, subTotal);

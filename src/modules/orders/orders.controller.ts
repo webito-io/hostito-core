@@ -21,13 +21,20 @@ import { RequirePermission } from 'src/common/decorators/permission.decorator';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('checkout')
   checkout(@Body() createOrderDto: CreateOrderDto, @Req() req) {
     return this.ordersService.checkout(createOrderDto, req.user);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post(':id/pay')
+  pay(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.ordersService.pay(id, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
