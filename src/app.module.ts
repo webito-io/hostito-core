@@ -23,6 +23,7 @@ import { CurrenciesModule } from './modules/currencies/currencies.module';
 import { CartsModule } from './modules/carts/carts.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PaymentGatewaysModule } from './modules/payment-gateways/payment-gateways.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -48,8 +49,13 @@ import { PaymentGatewaysModule } from './modules/payment-gateways/payment-gatewa
     CartsModule,
     EventEmitterModule.forRoot(),
     PaymentGatewaysModule,
+    BullModule.forRoot({
+      connection: {
+        url: process.env.REDIS_HOST_URL
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

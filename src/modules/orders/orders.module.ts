@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
-import { CouponsCalculator } from '../coupons/coupons.calculator';
 import { PaymentGatewaysModule } from '../payment-gateways/payment-gateways.module';
+import { CouponsModule } from '../coupons/coupons.module';
+import { CurrenciesModule } from '../currencies/currencies.module';
 
 @Module({
-  imports: [PaymentGatewaysModule],
+  imports: [PaymentGatewaysModule, CouponsModule, CurrenciesModule],
   controllers: [OrdersController],
-  providers: [OrdersService, CouponsCalculator],
+  providers: [OrdersService],
 })
 export class OrdersModule { }
