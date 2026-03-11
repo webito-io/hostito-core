@@ -66,6 +66,7 @@ export class OrdersService {
       const orderItemsWithProduct: any[] = [];
 
 
+      /* get products batch */
       const productIds = cartItems.map((item) => item.productId);
       const products = await prisma.product.findMany({
         where: {
@@ -74,6 +75,12 @@ export class OrdersService {
           },
         },
       });
+
+      /* calculate product prices batch */
+      const productsPrices = await this.currencyConverter.convert(
+        products.map((product) => ({ id: product.id, amount: product.price, currencyId: product.currencyId })),
+        organization.currencyId,
+      );
 
       for (const item of cartItems) {
 
@@ -87,21 +94,20 @@ export class OrdersService {
         }
 
         /* product price in new currency */
-        const productPriceInNewCurrency = await this.currencyConverter.convert(
-          product.price,
-          product.currencyId,
-          organization.currencyId,
-        );
+        const priceNewCurrency = productsPrices.find((productPrice) => productPrice.id === product.id)?.amount;
+        if (!priceNewCurrency) {
+          throw new BadRequestException(`Calculation failed`);
+        }
 
         /* subtotal and total */
-        subtotal += productPriceInNewCurrency * item.quantity;
-        total += productPriceInNewCurrency * item.quantity;
+        subtotal += priceNewCurrency * item.quantity;
+        total += priceNewCurrency * item.quantity;
 
         /* order items with product */
         orderItemsWithProduct.push({
           ...item,
-          unitPrice: productPriceInNewCurrency,
-          total: productPriceInNewCurrency * item.quantity,
+          unitPrice: priceNewCurrency,
+          total: priceNewCurrency * item.quantity,
         });
       }
 
@@ -252,7 +258,7 @@ export class OrdersService {
    * @param user
    * @returns
    */
-  async pay(id: number, user: User) {
+  async pay(id: number, gatewayId: number, user: User) {
     const order = await this.prisma.order.findUnique({
       where: {
         id,
@@ -273,21 +279,38 @@ export class OrdersService {
       throw new NotFoundException('Invoice not found');
     }
 
-    const transaction = await this.prisma.transaction.findFirst({
+    let transaction = await this.prisma.transaction.findFirst({
       where: {
         invoiceId: invoice.id,
-        status: 'PENDING',
       },
     });
-    if (!transaction || !transaction.gatewayId) {
-      throw new NotFoundException('Transaction not found');
+    if (!transaction) {
+      transaction = await this.prisma.transaction.create({
+        data: {
+          amount: invoice.total,
+          currencyId: invoice.currencyId,
+          organizationId: user.organizationId,
+          invoiceId: invoice.id,
+          gatewayId: gatewayId,
+          type: 'DEBIT',
+        },
+      });
+    } else {
+      transaction = await this.prisma.transaction.update({
+        where: {
+          id: transaction.id,
+        },
+        data: {
+          gatewayId: gatewayId,
+        },
+      });
     }
 
     const payment = await this.paymentGatewaysHandler.create({
       amount: invoice.total,
       currencyId: invoice.currencyId,
       transactionId: transaction.id,
-      gatewayId: transaction.gatewayId,
+      gatewayId: gatewayId,
     });
 
     return {

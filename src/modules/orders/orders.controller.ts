@@ -33,8 +33,8 @@ export class OrdersController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post(':id/pay')
-  pay(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return this.ordersService.pay(id, req.user);
+  pay(@Param('id', ParseIntPipe) id: number, @Body() payOrderDto: { gatewayId: number }, @Req() req) {
+    return this.ordersService.pay(id, payOrderDto.gatewayId, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

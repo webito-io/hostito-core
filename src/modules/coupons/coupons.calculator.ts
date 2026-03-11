@@ -42,11 +42,10 @@ export class CouponsCalculator {
       let amount = coupon.value;
 
       if (coupon.currencyId && coupon.currencyId !== currencyId) {
-        amount = await this.currencyConverter.convert(
-          coupon.value,
-          coupon.currencyId,
+        amount = (await this.currencyConverter.convert(
+          [{ id: coupon.currencyId, amount: coupon.value, currencyId: coupon.currencyId }],
           currencyId,
-        );
+        ))[0].amount;
       }
 
       return Math.min(amount, subTotal);

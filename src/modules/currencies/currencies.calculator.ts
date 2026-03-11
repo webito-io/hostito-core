@@ -6,12 +6,10 @@ export class CurrenciesCalculator {
         private readonly prisma: PrismaService,
     ) { }
 
-    async convert(amount: number, fromCurrencyId: number, toCurrencyId: number): Promise<number> {
-        if (fromCurrencyId === toCurrencyId) {
-            return amount;
-        }
+    async convert(amounts: { id: number, amount: number, currencyId: number }[], toCurrencyId: number): Promise<{ id: number, amount: number }[]> {
 
-        const currenciesId = [fromCurrencyId, toCurrencyId];
+
+        const currenciesId = [...new Set([...amounts.map((amount) => amount.currencyId), toCurrencyId])];
 
         const currencies = await this.prisma.currency.findMany({
             where: {
@@ -20,23 +18,36 @@ export class CurrenciesCalculator {
                 },
             },
         });
-        if (!currencies) {
+        if (!currencies || (currencies.length !== currenciesId.length)) {
             throw new NotFoundException('Currency rate not found');
         }
 
-        const fromCurrency = currencies.find((currency) => currency.id === fromCurrencyId);
         const toCurrency = currencies.find((currency) => currency.id === toCurrencyId);
-
-        if (!fromCurrency || !toCurrency) {
+        if (!toCurrency) {
             throw new NotFoundException('Currency rate not found');
         }
 
-        if (fromCurrency.rate === 0) {
-            throw new NotFoundException('Currency rate not found');
-        }
+        return amounts.map((item) => {
 
-        const rate = toCurrency.rate / fromCurrency.rate;
+            if (item.currencyId == toCurrencyId) {
+                return {
+                    id: item.id,
+                    amount: item.amount
+                }
+            }
 
-        return amount * rate;
+            const fromCurrency = currencies.find((currency) => currency.id === item.currencyId);
+            if (!fromCurrency) {
+                throw new NotFoundException('Currency rate not found');
+            }
+            if (fromCurrency.rate === 0) {
+                throw new NotFoundException('Currency rate not found');
+            }
+            const rate = toCurrency.rate / fromCurrency.rate;
+            return {
+                id: item.id,
+                amount: item.amount * rate,
+            };
+        });
     }
 }
