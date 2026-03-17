@@ -171,48 +171,63 @@ export class AuthService {
    * @returns
    */
   async resetPassword(token: string, password: string) {
-    let payload: { email?: string; type?: string };
-    try {
-      payload = this.jwt.verify(token);
-    } catch {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpiry: { gt: new Date() }
+      },
+    });
+
+    if (!user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { email: payload.email },
-    });
-    if (!user) throw new NotFoundException('User not found');
+    const isSame = await bcrypt.compare(password, user.password);
+    if (isSame) {
+      throw new UnauthorizedException('The new password must not be the same as the old one');
+    }
 
     const hashed = await bcrypt.hash(password, 10);
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { password: hashed },
+      data: {
+        password: hashed,
+        resetPasswordToken: null,
+        resetPasswordExpiry: null,
+      },
     });
 
     return { message: 'Password reset successful' };
   }
 
   async forgotPassword(email: string) {
-    // TODO: Implement forgot password logic
-
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) return { message: 'Password reset email sent' };
 
-    // TODO: use email templates and a service to send emails
+    // Simple cooldown
+    if (user.resetPasswordExpiry && user.resetPasswordExpiry.getTime() > Date.now() + 59 * 60000) {
+      throw new HttpException('Please wait before requesting again', 429);
+    }
+
+    const token = randomUUID();
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: token,
+        resetPasswordExpiry: new Date(Date.now() + 60 * 60000), // 1 hour
+      },
+    });
+
     const mailer = new Mailer();
-    const token = this.jwt.sign(
-      { email, type: 'reset-password' },
-      { expiresIn: '1h' },
-    );
 
     const sendMail = await mailer.send({
       email,
-      text: `Click the link below to reset your password: ${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`,
-      // template: 'reset-password'
+      text: `Click the link below to  reset your password: ${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`,
     });
 
     if (!sendMail.status) {
-      throw new HttpException('Email system', 500);
+      throw new HttpException('Email system error', 500);
     }
 
     return { message: 'Password reset email sent' };
@@ -259,6 +274,7 @@ export class AuthService {
       text: `Verify your email: ${process.env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`,
     });
 
+    console.log(sendMail)
     if (!sendMail.status) {
       throw new HttpException('Email system', 500);
     }
