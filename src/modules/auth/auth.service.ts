@@ -48,6 +48,8 @@ export class AuthService {
     const userExists = await this.prisma.user.findUnique({ where: { email } });
     if (userExists) throw new UnauthorizedException('email already exists');
 
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+
     /* Create user */
     const user = await this.prisma.user.create({
       data: {
@@ -57,8 +59,14 @@ export class AuthService {
         lastName: lastName,
         role: { connect: { name: 'User' } },
         organization: { connect: { id: organization.id } },
-        verificationToken: randomUUID(),
+        verificationToken,
       },
+    });
+
+    const mailer = new Mailer();
+    await mailer.send({
+      email,
+      text: `Your verification code is: ${verificationToken}`,
     });
 
     return {
@@ -262,7 +270,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('User not found');
     if (user.emailVerified) return { message: 'Email already verified' };
 
-    const verificationToken = randomUUID();
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
     await this.prisma.user.update({
       where: { id: user.id },
       data: { verificationToken },
@@ -271,10 +279,9 @@ export class AuthService {
     const mailer = new Mailer();
     const sendMail = await mailer.send({
       email,
-      text: `Verify your email: ${process.env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`,
+      text: `Your verification code is: ${verificationToken}`,
     });
 
-    console.log(sendMail)
     if (!sendMail.status) {
       throw new HttpException('Email system', 500);
     }
