@@ -9,14 +9,13 @@ export const RequirePermission = (
 export const hasPermission = (
   user,
   resource: string,
-  action: string,
-  scope: string,
+  action: 'create' | 'read' | 'update' | 'delete',
+  scope: 'all' | 'own',
 ) => {
   return user.role.permissions.some(
     (p) =>
       p.resource === resource &&
       ((p.action === action && p.scope === scope) ||
-        (p.action === 'all' && p.scope === 'all') ||
         (p.action === action && p.scope === 'all')),
   );
 };

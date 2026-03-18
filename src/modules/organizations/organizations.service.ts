@@ -8,7 +8,7 @@ import { organizationSelect } from './selects/organization.select';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createOrganizationDto: CreateOrganizationDto) {
     const { users, currencyId, name } = createOrganizationDto;
@@ -18,8 +18,8 @@ export class OrganizationsService {
         currency: { connect: { id: currencyId } },
         ...(users
           ? {
-              users: { connect: users.map((userId) => ({ id: userId })) },
-            }
+            users: { connect: users.map((userId) => ({ id: userId })) },
+          }
           : {}),
       },
       select: organizationSelect,
@@ -43,7 +43,7 @@ export class OrganizationsService {
       }),
       this.prisma.organization.count({ where }),
     ]);
-    return { organizations, total, page: pageNumber, limit: pageSize };
+    return { data: organizations, total, page: pageNumber, limit: pageSize };
   }
 
   async findOne(id: number, user: User) {
@@ -70,8 +70,8 @@ export class OrganizationsService {
         currencyId,
         ...(users
           ? {
-              users: { connect: users.map((userId) => ({ id: userId })) },
-            }
+            users: { connect: users.map((userId) => ({ id: userId })) },
+          }
           : {}),
       },
       select: organizationSelect,
