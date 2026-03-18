@@ -19,6 +19,8 @@ export class RolesService implements OnModuleInit {
       'roles',
       'organizations',
       'payment-gateways',
+      'taxes',
+      'currencies',
       'permissions',
       'products',
       'orders',
@@ -30,8 +32,14 @@ export class RolesService implements OnModuleInit {
 
     for (const resource of resources) {
       for (const [action, scope] of [
-        ['all', 'all'],
+        ['create', 'all'],
         ['read', 'all'],
+        ['update', 'all'],
+        ['delete', 'all'],
+        ['create', 'own'],
+        ['read', 'own'],
+        ['update', 'own'],
+        ['delete', 'own'],
       ]) {
         await this.prisma.permission.upsert({
           where: { resource_action_scope: { resource, action, scope } },
@@ -42,10 +50,10 @@ export class RolesService implements OnModuleInit {
     }
 
     const adminPerms = await this.prisma.permission.findMany({
-      where: { action: 'all' },
+      where: { scope: 'all' },
     });
     const userPerms = await this.prisma.permission.findMany({
-      where: { action: 'read' },
+      where: { scope: 'own' },
     });
 
     await this.prisma.role.upsert({

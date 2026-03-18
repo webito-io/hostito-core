@@ -1,21 +1,18 @@
 import {
-  ForbiddenException,
   Injectable,
-  NotFoundException,
+  NotFoundException
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { User } from 'generated/prisma/client';
-import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { userSelect } from './selects/user.select';
 import { FindUserDto } from './dto/find-user.dto';
 import { UpdateOwnUserDto } from './dto/update-own-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { userSelect } from './selects/user.select';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create a new user
