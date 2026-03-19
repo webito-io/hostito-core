@@ -12,30 +12,31 @@ FROM base AS dependencies
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma/
 
-# Install all dependencies (including dev tools for build)
+# Install ALL dependencies (including dev)
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma Client (Outputs to ../generated/prisma based on your schema.prisma)
+# Generate Prisma Client
 RUN pnpm dlx prisma generate
 
 # ======================== BUILD =======================
 FROM base AS build
 COPY . .
+# Copy node_modules and generated prisma client from deps stage
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/generated ./generated
 
 # Build the NestJS app
 RUN pnpm run build
 
-# Keep only production dependencies for the final image
-RUN pnpm install --prod --frozen-lockfile
+# Prune dev dependencies (this modifies node_modules)
+RUN pnpm prune --prod
 
 # ======================== RUNNER ======================
 FROM base AS production
 ENV NODE_ENV=production
 WORKDIR /app
 
-# Copy essential files from previous stages
+# Copy essential files
 COPY package.json ./
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
