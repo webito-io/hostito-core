@@ -40,5 +40,4 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/generated ./generated
 COPY prisma ./prisma/
 
-EXPOSE 3000
 CMD ["node", "dist/src/main"]
