@@ -26,11 +26,12 @@ import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { OptionalAuthGuard } from 'src/common/guards/optional.guard';
 import { CurrencyEntity } from './entities/currency.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('Currencies')
 @Controller('currencies')
 export class CurrenciesController {
-  constructor(private readonly currenciesService: CurrenciesService) {}
+  constructor(private readonly currenciesService: CurrenciesService) { }
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -55,12 +56,8 @@ export class CurrenciesController {
     description: 'Return all currencies',
     type: [CurrencyEntity],
   })
-  async findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Req() req,
-  ) {
-    return await this.currenciesService.findAll(page, limit, req.user);
+  async findAll(@Query() query: PaginationDto, @Req() req) {
+    return await this.currenciesService.findAll(query, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

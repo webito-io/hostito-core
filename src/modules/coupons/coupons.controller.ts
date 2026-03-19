@@ -1,25 +1,27 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { RequirePermission } from 'src/common/decorators/permission.decorator';
+import { PermissionsGuard } from 'src/common/guards/permission.guard';
+import { AuthGuard } from '../auth/auth.guard';
 import { CouponsService } from './coupons.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
+import { FindCouponDto } from './dto/find-coupons.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
-import { AuthGuard } from '../auth/auth.guard';
-import { PermissionsGuard } from 'src/common/guards/permission.guard';
-import { RequirePermission } from 'src/common/decorators/permission.decorator';
 
 @Controller('coupons')
 export class CouponsController {
-  constructor(private readonly couponsService: CouponsService) {}
+  constructor(private readonly couponsService: CouponsService) { }
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -33,8 +35,8 @@ export class CouponsController {
   @ApiBearerAuth()
   @RequirePermission('coupons', 'read', 'all')
   @Get()
-  findAll() {
-    return this.couponsService.findAll();
+  findAll(@Query() query: FindCouponDto) {
+    return this.couponsService.findAll(query);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

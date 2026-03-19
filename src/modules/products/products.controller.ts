@@ -1,15 +1,15 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query,
-  UseGuards,
-  Req,
+  Get,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -17,20 +17,20 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ProductsService } from './products.service';
+import { RequirePermission } from 'src/common/decorators/permission.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { OptionalAuthGuard } from 'src/common/guards/optional.guard';
+import { PermissionsGuard } from 'src/common/guards/permission.guard';
+import { AuthGuard } from '../auth/auth.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { FindProductDto } from './dto/find-product.dto';
-import { AuthGuard } from '../auth/auth.guard';
-import { PermissionsGuard } from 'src/common/guards/permission.guard';
-import { RequirePermission } from 'src/common/decorators/permission.decorator';
-import { OptionalAuthGuard } from 'src/common/guards/optional.guard';
 import { ProductEntity } from './entities/product.entity';
+import { ProductsService } from './products.service';
 
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) { }
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -55,8 +55,8 @@ export class ProductsController {
     description: 'Return all products',
     type: [ProductEntity],
   })
-  async findAll(@Query() findProductDto: FindProductDto, @Req() req) {
-    return await this.productsService.findAll(findProductDto, req.user);
+  async findAll(@Query() query: PaginationDto, @Req() req) {
+    return await this.productsService.findAll(query, req.user);
   }
 
   @UseGuards(OptionalAuthGuard)

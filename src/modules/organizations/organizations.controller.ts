@@ -24,11 +24,12 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { OrganizationsService } from './organizations.service';
 import { OrganizationEntity } from './entities/organization.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('Organizations')
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) {}
+  constructor(private readonly organizationsService: OrganizationsService) { }
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -54,12 +55,8 @@ export class OrganizationsController {
     description: 'Return all organizations',
     type: [OrganizationEntity],
   })
-  async findAll(
-    @Query('page', ParseIntPipe) page: number,
-    @Query('limit', ParseIntPipe) limit: number,
-    @Req() req,
-  ) {
-    return await this.organizationsService.findAll(page, limit, req.user);
+  async findAll(@Query() query: PaginationDto, @Req() req) {
+    return await this.organizationsService.findAll(query, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

@@ -24,6 +24,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PaymentGatewaysModule } from './modules/payment-gateways/payment-gateways.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ProvisionersModule } from './modules/provisioners/provisioners.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ProvisionersModule } from './modules/provisioners/provisioners.module';
       },
     }),
     ProvisionersModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

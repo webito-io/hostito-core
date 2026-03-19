@@ -1,13 +1,14 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -15,18 +16,19 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { TaxesService } from './taxes.service';
+import { RequirePermission } from 'src/common/decorators/permission.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PermissionsGuard } from 'src/common/guards/permission.guard';
+import { AuthGuard } from '../auth/auth.guard';
 import { CreateTaxDto } from './dto/create-tax.dto';
 import { UpdateTaxDto } from './dto/update-tax.dto';
-import { AuthGuard } from '../auth/auth.guard';
-import { PermissionsGuard } from 'src/common/guards/permission.guard';
-import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { TaxEntity } from './entities/tax.entity';
+import { TaxesService } from './taxes.service';
 
 @ApiTags('Taxes')
 @Controller('taxes')
 export class TaxesController {
-  constructor(private readonly taxesService: TaxesService) {}
+  constructor(private readonly taxesService: TaxesService) { }
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -48,8 +50,8 @@ export class TaxesController {
   @Get()
   @ApiOperation({ summary: 'Get all taxes' })
   @ApiResponse({ status: 200, description: 'Return all taxes', type: [TaxEntity] })
-  async findAll() {
-    return await this.taxesService.findAll();
+  async findAll(@Query() query: PaginationDto) {
+    return await this.taxesService.findAll(query);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

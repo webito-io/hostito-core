@@ -3,9 +3,9 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { FindUserDto } from './dto/find-user.dto';
 import { UpdateOwnUserDto } from './dto/update-own-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { userSelect } from './selects/user.select';
@@ -73,13 +73,13 @@ export class UsersService {
    * Get all users
    * @returns
    */
-  async findAll({ page, limit }: FindUserDto) {
+  async findAll({ page, limit }: PaginationDto) {
     const pageNumber = page || 1;
     const pageSize = limit || 10;
     const skip = (pageNumber - 1) * pageSize;
 
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({ skip, take: pageSize, select: userSelect }),
+      this.prisma.user.findMany({ skip, take: pageSize, select: userSelect, orderBy: { createdAt: 'desc' } }),
       this.prisma.user.count(),
     ]);
 

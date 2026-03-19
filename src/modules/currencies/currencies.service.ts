@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { currencySelect } from './selects/currencies.select';
 import { User } from 'generated/prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class CurrenciesService {
@@ -52,28 +53,27 @@ export class CurrenciesService {
    * @param user
    * @returns
    */
-  async findAll(page: number, limit: number, user: User) {
+  async findAll(query: PaginationDto, user: User) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
 
-    let where = {};
-
-    /* If user doesn't have permission to read all currencies, only return active currencies */
-    if (!hasPermission(user, 'currencies', 'read', 'all')) {
-      where = { isActive: true };
-    }
+    const where = {
+      ...(!hasPermission(user, 'currencies', 'read', 'all') && { isActive: true }),
+    };
 
     const [currencies, total] = await this.prisma.$transaction([
       this.prisma.currency.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         select: currencySelect,
-        skip: (page - 1) * limit,
+        skip,
         take: limit,
       }),
       this.prisma.currency.count({ where }),
     ]);
 
     return {
-      currencies,
+      data: currencies,
       total,
       page,
       limit,

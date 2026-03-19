@@ -1,17 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class Announcement {
+export class SettingEntity {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: 'New System Update' })
-  title: string;
+  @ApiProperty({ example: 'site_name' })
+  key: string;
 
-  @ApiProperty({ example: 'We have updated our terms of service.' })
-  content: string;
+  @ApiProperty({ example: 'My Hosting Company' })
+  value: string;
 
   @ApiProperty({ example: true })
-  isActive: boolean;
+  isPublic: boolean;
 
   @ApiProperty()
   createdAt: Date;

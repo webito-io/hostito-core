@@ -12,6 +12,7 @@ import { PaymentGatewaysHandler } from '../payment-gateways/payment-gateways.han
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class OrdersService {
@@ -328,19 +329,20 @@ export class OrdersService {
    * @param user
    * @returns
    */
-  async findAll(page: number, limit: number, user: User) {
-    let where: any = {};
+  async findAll(query: PaginationDto, user: User) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
 
-    if (!hasPermission(user, 'orders', 'read', 'all')) {
-      where = { organizationId: user.organizationId };
-    }
+    const where = {
+      ...(!hasPermission(user, 'orders', 'read', 'all') && { organizationId: user.organizationId }),
+    };
 
     const [orders, total] = await this.prisma.$transaction([
       this.prisma.order.findMany({
         orderBy: { createdAt: 'desc' },
         where,
-        skip: Math.max(0, (page - 1) * limit),
-        take: Math.max(1, limit),
+        skip,
+        take: limit,
         include: {
           items: true,
           coupon: true,

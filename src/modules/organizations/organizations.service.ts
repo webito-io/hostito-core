@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { organizationSelect } from './selects/organization.select';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class OrganizationsService {
@@ -26,24 +27,24 @@ export class OrganizationsService {
     });
   }
 
-  async findAll(page: number, limit: number, user: User) {
-    const pageNumber = Math.max(1, Number(page) || 1);
-    const pageSize = Math.max(1, Number(limit) || 10);
-    let where: any = {};
-    if (!hasPermission(user, 'organizations', 'read', 'all')) {
-      where = { id: user.organizationId };
-    }
+  async findAll(query: PaginationDto, user: User) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      ...(!hasPermission(user, 'organizations', 'read', 'all') && { id: user.organizationId }),
+    };
+
     const [organizations, total] = await this.prisma.$transaction([
       this.prisma.organization.findMany({
         orderBy: { createdAt: 'desc' },
         select: organizationSelect,
-        skip: (pageNumber - 1) * pageSize,
-        take: pageSize,
+        skip,
         where,
       }),
       this.prisma.organization.count({ where }),
     ]);
-    return { data: organizations, total, page: pageNumber, limit: pageSize };
+    return { data: organizations, total, page, limit };
   }
 
   async findOne(id: number, user: User) {

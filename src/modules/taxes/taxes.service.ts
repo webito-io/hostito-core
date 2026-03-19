@@ -2,10 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTaxDto } from './dto/create-tax.dto';
 import { UpdateTaxDto } from './dto/update-tax.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class TaxesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createTaxDto: CreateTaxDto) {
     return await this.prisma.tax.create({
@@ -13,10 +14,20 @@ export class TaxesService {
     });
   }
 
-  async findAll() {
-    return await this.prisma.tax.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(query: PaginationDto) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const [taxes, total] = await this.prisma.$transaction([
+      this.prisma.tax.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.tax.count(),
+    ]);
+
+    return { data: taxes, total, page, limit };
   }
 
   async findOne(id: number) {

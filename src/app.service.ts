@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  getHello() {
+    return {
+      message: 'Hostito Core API',
+      version: '0.1.0',
+      docs: `/api`
+    };
   }
 }

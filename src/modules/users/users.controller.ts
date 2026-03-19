@@ -4,12 +4,12 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
   Req,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,19 +18,19 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { AuthGuard } from '../auth/auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
-import { FindUserDto } from './dto/find-user.dto';
 import { UpdateOwnUserDto } from './dto/update-own-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UsersService } from './users.service';
 import { UserEntity } from './entities/user.entity';
+import { UsersService } from './users.service';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -56,8 +56,8 @@ export class UsersController {
     description: 'Return all users',
     type: [UserEntity],
   })
-  async findAll(@Query() findUserDto: FindUserDto) {
-    return await this.usersService.findAll(findUserDto);
+  async findAll(@Query() query: PaginationDto) {
+    return await this.usersService.findAll(query);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

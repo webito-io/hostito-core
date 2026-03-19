@@ -3,16 +3,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { hasPermission } from 'src/common/decorators/permission.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { FindProductDto } from './dto/find-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { productSelect } from './selects/product.select';
-import { hasPermission } from 'src/common/decorators/permission.decorator';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Create a product
@@ -34,7 +34,7 @@ export class ProductsService {
    * @returns
    */
 
-  async findAll({ page, limit }: FindProductDto, currentUser?) {
+  async findAll({ page, limit }: PaginationDto, currentUser?) {
     const pageNumber = page || 1;
     const pageSize = limit || 10;
 
@@ -46,6 +46,7 @@ export class ProductsService {
       this.prisma.product.findMany({
         skip: (pageNumber - 1) * pageSize,
         take: pageSize,
+        orderBy: { createdAt: 'desc' },
         where,
         select: productSelect,
       }),

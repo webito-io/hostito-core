@@ -425,3 +425,12 @@ model AuditLog {
   organizationId Int?
   createdAt      DateTime @default(now())
 }
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

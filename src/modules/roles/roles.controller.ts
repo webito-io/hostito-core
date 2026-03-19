@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -15,6 +16,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { AuthGuard } from '../auth/auth.guard';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -51,8 +53,8 @@ export class RolesController {
     description: 'Return all roles',
     type: [RoleEntity],
   })
-  async findAll() {
-    return await this.rolesService.findAll();
+  async findAll(@Query() query: PaginationDto) {
+    return await this.rolesService.findAll(query);
   }
 
   @UseGuards(AuthGuard)

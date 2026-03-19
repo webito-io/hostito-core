@@ -148,7 +148,7 @@ export class InvoicesService {
     ]);
 
     return {
-      invoices,
+      data: invoices,
       total,
       page,
       limit,

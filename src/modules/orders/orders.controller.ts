@@ -25,11 +25,12 @@ import { AuthGuard } from '../auth/auth.guard';
 import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { OrderEntity } from './entities/order.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
@@ -67,12 +68,8 @@ export class OrdersController {
     description: 'Return all orders',
     type: [OrderEntity],
   })
-  async findAll(
-    @Req() req,
-    @Query('page', ParseIntPipe) page: number,
-    @Query('limit', ParseIntPipe) limit: number,
-  ) {
-    return await this.ordersService.findAll(page, limit, req.user);
+  async findAll(@Query() query: PaginationDto, @Req() req) {
+    return await this.ordersService.findAll(query, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

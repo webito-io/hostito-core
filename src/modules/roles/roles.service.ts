@@ -2,80 +2,11 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
-export class RolesService implements OnModuleInit {
+export class RolesService {
   constructor(private readonly prisma: PrismaService) { }
-
-  /*
-    This function is called when the module is initialized.
-    It creates the default roles if they don't exist.
-    @returns void
-  */
-
-  async onModuleInit() {
-    const resources = [
-      'users',
-      'roles',
-      'organizations',
-      'payment-gateways',
-      'taxes',
-      'currencies',
-      'permissions',
-      'products',
-      'orders',
-      'invoices',
-      'servers',
-      'payments',
-      'notifications',
-    ];
-
-    for (const resource of resources) {
-      for (const [action, scope] of [
-        ['create', 'all'],
-        ['read', 'all'],
-        ['update', 'all'],
-        ['delete', 'all'],
-        ['create', 'own'],
-        ['read', 'own'],
-        ['update', 'own'],
-        ['delete', 'own'],
-      ]) {
-        await this.prisma.permission.upsert({
-          where: { resource_action_scope: { resource, action, scope } },
-          update: {},
-          create: { resource, action, scope },
-        });
-      }
-    }
-
-    const adminPerms = await this.prisma.permission.findMany({
-      where: { scope: 'all' },
-    });
-    const userPerms = await this.prisma.permission.findMany({
-      where: { scope: 'own' },
-    });
-
-    await this.prisma.role.upsert({
-      where: { id: 10 },
-      update: {},
-      create: {
-        id: 10,
-        name: 'SuperAdmin',
-        permissions: { connect: adminPerms.map((p) => ({ id: p.id })) },
-      },
-    });
-
-    await this.prisma.role.upsert({
-      where: { id: 100 },
-      update: {},
-      create: {
-        id: 100,
-        name: 'User',
-        permissions: { connect: userPerms.map((p) => ({ id: p.id })) },
-      },
-    });
-  }
 
   /*
     This function creates a new role.
@@ -99,10 +30,21 @@ export class RolesService implements OnModuleInit {
     @returns An array of roles.
   */
 
-  async findAll() {
-    return await this.prisma.role.findMany({
-      include: { permissions: true },
-    });
+  async findAll(query: PaginationDto) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const [roles, total] = await this.prisma.$transaction([
+      this.prisma.role.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: { permissions: true },
+      }),
+      this.prisma.role.count(),
+    ]);
+
+    return { data: roles, total, page, limit };
   }
 
   /*

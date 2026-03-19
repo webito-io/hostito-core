@@ -1,26 +1,65 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAuditLogDto } from './dto/create-audit-log.dto';
-import { UpdateAuditLogDto } from './dto/update-audit-log.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { FindAuditLogsDto } from './dto/find-audit-logs.dto';
 
 @Injectable()
 export class AuditLogsService {
-  create(createAuditLogDto: CreateAuditLogDto) {
-    return 'This action adds a new auditLog';
+  constructor(private readonly prisma: PrismaService) { }
+
+  async create(data: {
+    action: string;
+    entity: string;
+    entityId?: number;
+    oldValue?: any;
+    newValue?: any;
+    ip?: string;
+    userAgent?: string;
+    userId?: number;
+    organizationId?: number;
+  }) {
+    return await this.prisma.auditLog.create({
+      data,
+    });
   }
 
-  findAll() {
-    return `This action returns all auditLogs`;
+  async findAll(query: FindAuditLogsDto) {
+    const { page = 1, limit = 10, action, entity, userId, organizationId } = query;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      ...(action && { action }),
+      ...(entity && { entity }),
+      ...(userId && { userId }),
+      ...(organizationId && { organizationId }),
+    };
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          organization: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auditLog`;
-  }
-
-  update(id: number, updateAuditLogDto: UpdateAuditLogDto) {
-    return `This action updates a #${id} auditLog`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auditLog`;
-  }
 }
