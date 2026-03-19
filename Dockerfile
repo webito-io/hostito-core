@@ -13,7 +13,7 @@ COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma/
 
 # Install all dependencies (including dev tools for build)
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Generate Prisma Client (Outputs to ../generated/prisma based on your schema.prisma)
 RUN pnpm dlx prisma generate
@@ -28,7 +28,7 @@ COPY --from=dependencies /app/generated ./generated
 RUN pnpm run build
 
 # Keep only production dependencies for the final image
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
 # ======================== RUNNER ======================
 FROM base AS production
