@@ -8,20 +8,15 @@ WORKDIR /app
 # ======================== DEPS ========================
 FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
-COPY prisma ./prisma/
-COPY prisma.config.ts ./
-
 RUN pnpm install --frozen-lockfile
-RUN npx prisma generate
 
 # ======================== BUILD =======================
 FROM base AS build
-COPY . .
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/generated ./generated
+COPY . .
 
+RUN npx prisma generate
 RUN pnpm run build
-
 RUN pnpm prune --prod
 
 # ======================== PRODUCTION ==================
@@ -32,7 +27,7 @@ WORKDIR /app
 COPY package.json ./
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/generated ./generated
 COPY prisma ./prisma/
 
-# Reference the compiled .js file explicitly
 CMD ["node", "dist/src/main.js"]
