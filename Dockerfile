@@ -43,4 +43,4 @@ COPY --from=build /app/generated ./generated
 COPY prisma ./prisma
 
 # Start server
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
