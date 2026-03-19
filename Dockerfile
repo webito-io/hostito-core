@@ -1,5 +1,5 @@
 # ======================== BASE ========================
-FROM node:22-alpine AS base
+FROM node:20-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -12,7 +12,7 @@ COPY prisma ./prisma/
 COPY prisma.config.ts ./
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm dlx prisma generate
+RUN npx prisma generate
 
 # ======================== BUILD =======================
 FROM base AS build
@@ -23,7 +23,7 @@ COPY --from=deps /app/generated ./generated
 # Build NestJS
 RUN pnpm run build
 
-# Fix: force Node.js to treat compiled generated files as CommonJS
+# Fix: force Node.js to treat compiled Prisma files as CommonJS
 RUN echo '{"type":"commonjs"}' > dist/generated/package.json
 
 # Remove dev dependencies
