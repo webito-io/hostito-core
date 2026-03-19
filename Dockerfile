@@ -1,47 +1,44 @@
 # ======================== BASE ========================
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-
-# Enable pnpm via corepack
 RUN corepack enable
 WORKDIR /app
 
 # ======================== DEPS ========================
-FROM base AS dependencies
+FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
-# Install ALL dependencies (including dev)
 RUN pnpm install --frozen-lockfile
-
-# Generate Prisma Client
 RUN pnpm dlx prisma generate
 
 # ======================== BUILD =======================
 FROM base AS build
 COPY . .
-# Copy node_modules and generated prisma client from deps stage
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY --from=dependencies /app/generated ./generated
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/generated ./generated
 
-# Build the NestJS app
+# Build NestJS
 RUN pnpm run build
 
-# Prune dev dependencies (this modifies node_modules)
+# Fix: force Node.js to treat compiled generated files as CommonJS
+RUN echo '{"type":"commonjs"}' > dist/generated/package.json
+
+# Remove dev dependencies
 RUN pnpm prune --prod
 
-# ======================== RUNNER ======================
+# ======================== PRODUCTION ==================
 FROM base AS production
 ENV NODE_ENV=production
 WORKDIR /app
 
-# Copy essential files
 COPY package.json ./
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/generated ./generated
-COPY prisma ./prisma
+COPY prisma ./prisma/
 
-# Start server
+EXPOSE 3000
 CMD ["node", "dist/src/main"]
