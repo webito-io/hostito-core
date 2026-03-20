@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CouponType } from 'generated/prisma/client';
+import { CouponType } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,

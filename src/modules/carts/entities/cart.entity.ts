@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CartStatus } from 'generated/prisma';
+import { CartStatus } from '@prisma/client';
 import { ProductEntity } from '../../products/entities/product.entity';
 
 export class CartItemEntity {

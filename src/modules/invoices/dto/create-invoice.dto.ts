@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsDate, IsNumber, IsOptional } from 'class-validator';
-import { InvoiceItem, InvoiceStatus } from 'generated/prisma/client';
+import { InvoiceItem, InvoiceStatus } from '@prisma/client';
 
 export class CreateInvoiceDto {
   @ApiProperty({ description: 'Total amount of the invoice' })

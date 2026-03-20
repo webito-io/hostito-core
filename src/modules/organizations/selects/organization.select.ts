@@ -1,4 +1,4 @@
-import { Prisma } from 'generated/prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const organizationSelect = {
   id: true,

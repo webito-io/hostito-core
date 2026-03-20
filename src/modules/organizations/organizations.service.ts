@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from 'generated/prisma/client';
+import { User } from '@prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { Prisma } from 'generated/prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdatePaymentGatewayDto } from './dto/update-payment-gateway.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
