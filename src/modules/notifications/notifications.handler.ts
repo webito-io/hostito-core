@@ -13,40 +13,47 @@ export class NotificationsHandler implements INotificationsHandler {
 
     async send(notification: NotificationDto) {
 
-        /* find notification drivers */
-        const drivers = await this.prisma.setting.findUnique({
-            where: {
-                key: 'notification_drivers',
-            },
-        });
-        if (!drivers) {
-            throw new Error('Notification driver not found');
+        try {
+
+            /* find notification drivers */
+            const drivers = await this.prisma.setting.findUnique({
+                where: {
+                    key: 'notification_drivers',
+                },
+            });
+            if (!drivers) {
+                throw new Error('Notification driver not found');
+            }
+            const driver = drivers.value && drivers.value[notification.type];
+            if (!driver) {
+                throw new Error('Notification driver not found');
+            }
+            const provider = this.notificationFactory.get(driver);
+
+
+            /* find notification template */
+            const template = await this.prisma.notificationTemplate.findUnique({
+                where: {
+                    name: notification.template,
+                },
+            });
+            if (!template) {
+                throw new Error('Notification template not found');
+            }
+
+            const body = Handlebars.compile(template.body)(notification);
+            const subject = Handlebars.compile(template.subject)(notification);
+
+            return await provider.send({
+                to: notification.to,
+                subject: subject,
+                body: body,
+            });
+
+        } catch (error) {
+            console.error(error);
+            return { status: false, message: error.message };
         }
-        const driver = drivers.value && drivers.value[notification.type];
-        if (!driver) {
-            throw new Error('Notification driver not found');
-        }
-        const provider = this.notificationFactory.get(driver);
-
-
-        /* find notification template */
-        const template = await this.prisma.notificationTemplate.findUnique({
-            where: {
-                name: notification.template,
-            },
-        });
-        if (!template) {
-            throw new Error('Notification template not found');
-        }
-
-        const body = Handlebars.compile(template.body)(notification);
-        const subject = Handlebars.compile(template.subject)(notification);
-
-        return await provider.send({
-            to: notification.to,
-            subject: subject,
-            body: body,
-        });
 
     }
 
