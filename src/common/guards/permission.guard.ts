@@ -29,8 +29,6 @@ export class PermissionsGuard implements CanActivate {
 
     if (!role) throw new ForbiddenException();
 
-    console.log(role.permissions);
-
     const has = role.permissions.some(
       (p) =>
         p.resource === required.resource &&
