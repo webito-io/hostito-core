@@ -21,13 +21,13 @@ export class InvoicesService {
    * @param createInvoiceDto - The data to create the invoice.
    * @returns A promise that resolves to the created invoice and payment transaction.
    */
-  async create(createInvoiceDto: CreateInvoiceDto) {
+  async create(createInvoiceDto: CreateInvoiceDto, user: User) {
     const result = await this.prisma.$transaction(async (prisma) => {
       const createdInvoice = await prisma.invoice.create({
         data: {
           ...createInvoiceDto,
           items: {
-            create: createInvoiceDto.items.map((item) => ({
+            create: createInvoiceDto.items?.map((item) => ({
               description: item.description,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
@@ -37,6 +37,10 @@ export class InvoicesService {
         },
         select: invoiceSelect,
       });
+
+      if (!createInvoiceDto.gatewayId && hasPermission(user, 'invoices', 'update', 'all')) {
+        return { invoice: createdInvoice }
+      }
 
       /* Create a payment transaction for the invoice */
       const transaction = await prisma.transaction.create({
@@ -131,13 +135,13 @@ export class InvoicesService {
     const [invoices, total] = await this.prisma.$transaction([
       this.prisma.invoice.findMany({
         orderBy: { createdAt: 'desc' },
-        select: invoiceSelect,
-        skip: (page - 1) * limit,
-        take: limit,
         where: {
           organizationId: user.organizationId,
           ...where,
         },
+        select: invoiceSelect,
+        skip: (page - 1) * limit,
+        take: limit,
       }),
       this.prisma.invoice.count({
         where: {
@@ -187,21 +191,36 @@ export class InvoicesService {
     if (!exists) {
       throw new NotFoundException(`Invoice with ID ${id} not found`);
     }
-    const { total, tax, subtotal, discount, shipping, status, dueDate } =
-      updateInvoiceDto;
 
-    const updatedInvoice = await this.prisma.invoice.update({
-      where: { id },
-      data: {
-        total,
-        tax,
-        subtotal,
-        discount,
-        shipping,
-        status,
-        dueDate,
-      },
-      select: invoiceSelect,
+    const updatedInvoice = await this.prisma.$transaction(async (prisma) => {
+      /* Remove existing items first */
+      if (updateInvoiceDto.items) {
+        await prisma.invoiceItem.deleteMany({
+          where: { invoiceId: id },
+        });
+      }
+
+      return prisma.invoice.update({
+        where: { id },
+        data: {
+          total: updateInvoiceDto.total,
+          tax: updateInvoiceDto.tax,
+          subtotal: updateInvoiceDto.subtotal,
+          discount: updateInvoiceDto.discount,
+          shipping: updateInvoiceDto.shipping,
+          status: updateInvoiceDto.status,
+          dueDate: updateInvoiceDto.dueDate,
+          items: updateInvoiceDto.items ? {
+            create: updateInvoiceDto.items.map((item) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+            })),
+          } : undefined,
+        },
+        select: invoiceSelect,
+      });
     });
 
     this.emitter.emit('invoice.updated', updatedInvoice);

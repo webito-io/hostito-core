@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { InvoiceStatus } from 'generated/prisma/enums';
+import { InvoiceStatus } from 'generated/prisma';
 
 export class InvoiceEntity {
   @ApiProperty({ example: 1 })

@@ -103,7 +103,7 @@ hostito-core/
 │   │   ├── services/
 │   │   ├── announcements/
 │   │   ├── audit-logs/
-│   │   └── email-templates/
+│   │   └── notification-templates/
 │   └── common/
 │       ├── guards/
 │       ├── decorators/

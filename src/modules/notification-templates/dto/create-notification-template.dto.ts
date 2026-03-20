@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsBoolean, IsOptional } from 'class-validator';
 
-export class CreateEmailTemplateDto {
+export class CreateNotificationTemplateDto {
   @ApiProperty({ example: 'invoice.paid' })
   @IsString()
   @IsNotEmpty()

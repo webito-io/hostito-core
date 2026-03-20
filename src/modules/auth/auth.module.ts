@@ -6,11 +6,13 @@ import * as dotenv from 'dotenv';
 import { PassportModule } from '@nestjs/passport';
 import { AuthGuard } from './auth.guard';
 import { JwtStrategy } from './jwt.strategy';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 dotenv.config();
 
 @Module({
   imports: [
+    NotificationsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
@@ -21,4 +23,4 @@ dotenv.config();
   providers: [AuthService, JwtStrategy, AuthGuard],
   exports: [PassportModule, JwtStrategy, AuthGuard],
 })
-export class AuthModule {}
+export class AuthModule { }

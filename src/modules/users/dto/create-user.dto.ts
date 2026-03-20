@@ -3,13 +3,12 @@ import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
-  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
-  MinLength,
+  MinLength
 } from 'class-validator';
-import { Status } from 'generated/prisma/enums';
+import { Status } from 'generated/prisma';
 
 export class CreateUserDto {
   @ApiProperty({ description: 'User email address' })

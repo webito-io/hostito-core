@@ -29,7 +29,7 @@ import { InvoiceEntity } from './entities/invoice.entity';
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(private readonly invoicesService: InvoicesService) { }
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -41,8 +41,8 @@ export class InvoicesController {
     description: 'Invoice created successfully',
     type: InvoiceEntity,
   })
-  async create(@Body() createInvoiceDto: CreateInvoiceDto) {
-    return await this.invoicesService.create(createInvoiceDto);
+  async create(@Body() createInvoiceDto: CreateInvoiceDto, @Req() req) {
+    return await this.invoicesService.create(createInvoiceDto, req.user);
   }
 
   @UseGuards(AuthGuard)

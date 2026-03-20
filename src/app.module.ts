@@ -16,7 +16,7 @@ import { DomainsModule } from './modules/domains/domains.module';
 import { TaxesModule } from './modules/taxes/taxes.module';
 import { CouponsModule } from './modules/coupons/coupons.module';
 import { AnnouncementsModule } from './modules/announcements/announcements.module';
-import { EmailTemplatesModule } from './modules/email-templates/email-templates.module';
+import { NotificationTemplatesModule } from './modules/notification-templates/notification-templates.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
 import { CartsModule } from './modules/carts/carts.module';
@@ -43,7 +43,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     TaxesModule,
     CouponsModule,
     AnnouncementsModule,
-    EmailTemplatesModule,
+    NotificationTemplatesModule,
     AuditLogsModule,
     CurrenciesModule,
     CartsModule,
