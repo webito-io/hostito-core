@@ -30,4 +30,4 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/generated ./generated
 COPY prisma ./prisma/
 
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]
