@@ -7,7 +7,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { BillingCycle, ProductType } from 'generated/prisma';
+import { BillingCycle, ProductType } from '@prisma/client';
 
 export class CreateProductDto {
   @ApiProperty({ description: 'Name of the product' })

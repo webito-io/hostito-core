@@ -1,5 +1,5 @@
 import { IsEnum, IsNumber, IsOptional } from 'class-validator';
-import { Status } from 'generated/prisma';
+import { Status } from '@prisma/client';
 import { CreateUserDto } from './create-user.dto';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 

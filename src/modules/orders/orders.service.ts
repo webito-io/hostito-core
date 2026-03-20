@@ -4,7 +4,7 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { InvoiceStatus, User } from 'generated/prisma/client';
+import { InvoiceStatus, User } from '@prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { CouponsCalculator } from '../coupons/coupons.calculator';
 import { CurrenciesCalculator } from '../currencies/currencies.calculator';

@@ -5,7 +5,7 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { invoiceSelect } from './selects/invoices.select';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
-import { InvoiceStatus, User } from 'generated/prisma/client';
+import { InvoiceStatus, User } from '@prisma/client';
 import { PaymentGatewaysHandler } from '../payment-gateways/payment-gateways.handler';
 
 @Injectable()

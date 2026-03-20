@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CartItemDto } from './dto/cart-item.dto';
-import { User } from 'generated/prisma/client';
+import { User } from '@prisma/client';
 import { CouponsCalculator } from '../coupons/coupons.calculator';
 
 @Injectable()

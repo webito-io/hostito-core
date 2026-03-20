@@ -1,4 +1,4 @@
-import { PaymentGateway, Transaction } from "generated/prisma/client";
+import { PaymentGateway, Transaction } from "@prisma/client";
 import Stripe from "stripe";
 
 interface StripeConfig {

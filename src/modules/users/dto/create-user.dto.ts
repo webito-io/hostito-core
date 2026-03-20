@@ -8,7 +8,7 @@ import {
   IsString,
   MinLength
 } from 'class-validator';
-import { Status } from 'generated/prisma';
+import { Status } from '@prisma/client';
 
 export class CreateUserDto {
   @ApiProperty({ description: 'User email address' })

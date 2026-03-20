@@ -3,7 +3,7 @@ import { CreateCurrencyDto } from './dto/create-currency.dto';
 import { UpdateCurrencyDto } from './dto/update-currency.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { currencySelect } from './selects/currencies.select';
-import { User } from 'generated/prisma/client';
+import { User } from '@prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 

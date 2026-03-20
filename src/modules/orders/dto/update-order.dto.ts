@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
-import { OrderStatus } from 'generated/prisma';
+import { OrderStatus } from '@prisma/client';
 
 export class UpdateOrderDto {
   @ApiProperty({

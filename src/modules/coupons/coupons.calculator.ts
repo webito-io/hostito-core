@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Coupon } from 'generated/prisma/client';
+import { Coupon } from '@prisma/client';
 import { CurrenciesCalculator } from '../currencies/currencies.calculator';
 
 @Injectable()
