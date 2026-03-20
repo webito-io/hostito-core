@@ -7,15 +7,16 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
-import { Mailer } from 'src/common/mailer/mailer.setup';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './auth.dto';
+import { NotificationsHandler } from '../notifications/notifications.handler';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private notificationHandler: NotificationsHandler,
   ) { }
 
   /**
@@ -63,10 +64,13 @@ export class AuthService {
       },
     });
 
-    const mailer = new Mailer();
-    await mailer.send({
-      email,
-      text: `Your verification code is: ${verificationToken}`,
+    await this.notificationHandler.send({
+      type: 'email',
+      to: email,
+      template: 'verify_email',
+      data: {
+        verificationToken,
+      },
     });
 
     return {
@@ -227,11 +231,13 @@ export class AuthService {
       },
     });
 
-    const mailer = new Mailer();
-
-    const sendMail = await mailer.send({
-      email,
-      text: `Click the link below to  reset your password: ${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`,
+    const sendMail = await this.notificationHandler.send({
+      type: 'email',
+      to: email,
+      template: 'reset_password',
+      data: {
+        token,
+      },
     });
 
     if (!sendMail.status) {
@@ -257,6 +263,16 @@ export class AuthService {
       data: { emailVerified: true, verificationToken: null },
     });
 
+    // Send welcome email
+    await this.notificationHandler.send({
+      type: 'email',
+      to: user.email,
+      template: 'welcome',
+      data: {
+        firstName: user.firstName,
+      },
+    });
+
     return { message: 'Email verified successfully' };
   }
 
@@ -276,10 +292,13 @@ export class AuthService {
       data: { verificationToken },
     });
 
-    const mailer = new Mailer();
-    const sendMail = await mailer.send({
-      email,
-      text: `Your verification code is: ${verificationToken}`,
+    const sendMail = await this.notificationHandler.send({
+      type: 'email',
+      to: email,
+      template: 'verify_email',
+      data: {
+        verificationToken,
+      },
     });
 
     if (!sendMail.status) {

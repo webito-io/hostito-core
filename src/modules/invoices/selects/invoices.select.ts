@@ -9,6 +9,8 @@ export const invoiceSelect = {
   shipping: true,
   status: true,
   dueDate: true,
+  createdAt: true,
+  updatedAt: true,
   paidAt: true,
   currency: {
     select: {

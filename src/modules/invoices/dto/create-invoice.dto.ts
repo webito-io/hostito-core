@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsNumber } from 'class-validator';
+import { IsDate, IsNumber, IsOptional } from 'class-validator';
 import { InvoiceItem, InvoiceStatus } from 'generated/prisma/client';
 
 export class CreateInvoiceDto {
@@ -39,6 +39,7 @@ export class CreateInvoiceDto {
 
   @ApiProperty({ description: 'Gateway ID of the invoice' })
   @IsNumber()
+  @IsOptional()
   @Type(() => Number)
   gatewayId: number;
 

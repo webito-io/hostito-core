@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BillingCycle, ProductType } from 'generated/prisma/enums';
+import { BillingCycle, ProductType } from 'generated/prisma';
 
 export class ProductEntity {
   @ApiProperty({ example: 1 })

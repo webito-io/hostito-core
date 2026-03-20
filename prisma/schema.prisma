@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider     = "prisma-client"
+  provider     = "prisma-client-js"
   output       = "../generated/prisma"
   moduleFormat = "commonjs"
 }
@@ -400,10 +400,10 @@ model Announcement {
   updatedAt DateTime @updatedAt
 }
 
-model EmailTemplate {
+model NotificationTemplate {
   id        Int      @id @default(autoincrement())
   name      String   @unique // invoice.paid, service.created
-  subject   String
+  subject   String?
   body      String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -430,7 +430,7 @@ model AuditLog {
 model Setting {
   id        Int      @id @default(autoincrement())
   key       String   @unique
-  value     String
+  value     Json     @default("\"\"")
   isPublic  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
