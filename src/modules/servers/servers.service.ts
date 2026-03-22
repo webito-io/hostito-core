@@ -1,26 +1,67 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateServerDto } from './dto/create-server.dto';
 import { UpdateServerDto } from './dto/update-server.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class ServersService {
-  create(createServerDto: CreateServerDto) {
-    return 'This action adds a new server';
+  constructor(private readonly prisma: PrismaService) { }
+
+  async create(createServerDto: CreateServerDto) {
+    return this.prisma.server.create({
+      data: createServerDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all servers`;
+  async findAll(paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.server.findMany({
+        skip,
+        take: limit,
+        include: { provisioner: true },
+      }),
+      this.prisma.server.count(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+      },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} server`;
+  async findOne(id: number) {
+    const server = await this.prisma.server.findUnique({
+      where: { id },
+      include: { provisioner: true, services: true },
+    });
+
+    if (!server) {
+      throw new NotFoundException(`Server with ID ${id} not found`);
+    }
+
+    return server;
   }
 
-  update(id: number, updateServerDto: UpdateServerDto) {
-    return `This action updates a #${id} server`;
+  async update(id: number, updateServerDto: UpdateServerDto) {
+    await this.findOne(id); // Ensure exists
+    return this.prisma.server.update({
+      where: { id },
+      data: updateServerDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} server`;
+  async remove(id: number) {
+    await this.findOne(id); // Ensure exists
+    return this.prisma.server.delete({
+      where: { id },
+    });
   }
 }

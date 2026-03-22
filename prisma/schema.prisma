@@ -186,6 +186,10 @@ model InvoiceItem {
   total       Float
   invoice     Invoice  @relation(fields: [invoiceId], references: [id])
   invoiceId   Int
+  service     Service? @relation(fields: [serviceId], references: [id])
+  serviceId   Int?
+  domain      Domain?  @relation(fields: [domainId], references: [id])
+  domainId    Int?
   createdAt   DateTime @default(now())
 }
 
@@ -288,9 +292,14 @@ model Domain {
   registrar      String?      // resellerclub, enom
   expiresAt      DateTime?
   autoRenew      Boolean      @default(true)
+  nameservers    String[]     @default([])
+  isLocked       Boolean      @default(true)
+  privacy        Boolean      @default(false)
+  authCode       String?
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId Int
   service        Service?
+  invoiceItems   InvoiceItem[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
@@ -319,6 +328,7 @@ model Service {
   server   Server? @relation(fields: [serverId], references: [id])
   serverId Int?
   nextDueDate    DateTime?
+  invoiceItems   InvoiceItem[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 }

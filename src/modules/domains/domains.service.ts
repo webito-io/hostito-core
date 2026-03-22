@@ -1,19 +1,29 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateDomainDto } from './dto/create-domain.dto';
-import { UpdateDomainDto } from './dto/update-domain.dto';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { UpdateDomainDto } from './dto/update-domain.dto';
+import { CheckDomainDto } from './dto/check-domain.dto';
+
+import { DomainsFactory } from './domains.factory';
+import { DomainsHandler } from './domains.handler';
+import { DomainProviderType } from './providers/domains.provider.interface';
 
 @Injectable()
 export class DomainsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly domainsFactory: DomainsFactory,
+    private readonly domainsHandler: DomainsHandler,
+  ) { }
 
-  async create(createDomainDto: CreateDomainDto) {
-    return await this.prisma.domain.create({
-      data: createDomainDto,
-    });
+  async check(domainName: string): Promise<CheckDomainDto> {
+    const provider = this.domainsFactory.get(DomainProviderType.SPACESHIP);
+    if (!provider.availability) throw new Error('Provider does not support domain availability');
+    const available = await provider.availability(domainName);
+    return { domain: domainName, available };
   }
+
 
   async findAll(query: PaginationDto, user) {
     const { page = 1, limit = 10 } = query;
@@ -64,7 +74,22 @@ export class DomainsService {
   }
 
   async update(id: number, updateDomainDto: UpdateDomainDto, user) {
-    await this.findOne(id, user)
+    const domain = await this.findOne(id, user);
+
+    // 1. Sync with Registrar (Async via Queue)
+    if (updateDomainDto.nameservers) {
+      await this.domainsHandler.executeAction(id, 'nameservers', { nameservers: updateDomainDto.nameservers });
+    }
+
+    if (updateDomainDto.isLocked !== undefined) {
+      await this.domainsHandler.executeAction(id, updateDomainDto.isLocked ? 'lock' : 'unlock');
+    }
+
+    if (updateDomainDto.privacy !== undefined) {
+      await this.domainsHandler.executeAction(id, 'privacy', { enabled: updateDomainDto.privacy });
+    }
+
+    // 2. Update Local DB
     return await this.prisma.domain.update({
       where: { id },
       data: updateDomainDto,

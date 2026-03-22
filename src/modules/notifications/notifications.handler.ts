@@ -1,60 +1,31 @@
 import { Injectable } from "@nestjs/common";
 import { NotificationDto, INotificationsHandler } from "./notifications.interface";
-import { NotificationFactory } from "./notifications.factory";
-import { PrismaService } from "../prisma/prisma.service";
-import Handlebars from 'handlebars';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class NotificationsHandler implements INotificationsHandler {
     constructor(
-        private readonly prisma: PrismaService,
-        private readonly notificationFactory: NotificationFactory,
+        @InjectQueue('notifications') private readonly notificationsQueue: Queue,
     ) { }
 
     async send(notification: NotificationDto) {
-
         try {
 
-            /* find notification drivers */
-            const drivers = await this.prisma.setting.findUnique({
-                where: {
-                    key: 'notification_drivers',
+            await this.notificationsQueue.add('send-notification', notification, {
+                attempts: 3,
+                backoff: {
+                    type: 'exponential',
+                    delay: 2000,
                 },
-            });
-            if (!drivers) {
-                throw new Error('Notification driver not found');
-            }
-            const driver = drivers.value && drivers.value[notification.type];
-            if (!driver) {
-                throw new Error('Notification driver not found');
-            }
-            const provider = this.notificationFactory.get(driver);
-
-
-            /* find notification template */
-            const template = await this.prisma.notificationTemplate.findUnique({
-                where: {
-                    name: notification.template,
-                },
-            });
-            if (!template) {
-                throw new Error('Notification template not found');
-            }
-
-            const body = Handlebars.compile(template.body)(notification);
-            const subject = Handlebars.compile(template.subject)(notification);
-
-            return await provider.send({
-                to: notification.to,
-                subject: subject,
-                body: body,
+                removeOnComplete: true,
+                removeOnFail: false,
             });
 
-        } catch (error) {
-            console.error(error);
+            return { status: true, message: 'Notification queued successfully' };
+
+        } catch (error: any) {
             return { status: false, message: error.message };
         }
-
     }
-
 }

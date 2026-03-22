@@ -1,0 +1,111 @@
+import { Injectable } from '@nestjs/common';
+import { Provisioner, Server } from '@prisma/client';
+import { ProvisionResult, ProvisionerProvider, ProvisioningArgs } from '../provisioners.provider.interface';
+
+export type CpanelCredentials = {
+  username: string;
+  apiToken: string;
+};
+
+@Injectable()
+export class CpanelProvider implements ProvisionerProvider {
+  private async request<T = unknown>(server: Server, endpoint: string, params: Record<string, string | number | undefined>): Promise<T> {
+
+    const creds = server.credentials as CpanelCredentials;
+
+    if (!creds.username || !creds.apiToken) {
+      throw new Error(`Incomplete cPanel credentials for server #${server.id}`);
+    }
+
+    const url = new URL(`https://${server.hostname}:${server.port || 2087}/json-api/${endpoint}`);
+    url.searchParams.append('api.version', '1');
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) url.searchParams.append(key, String(value));
+    }
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { Authorization: `whm ${creds.username}:${creds.apiToken}` },
+    });
+
+    if (!response.ok) throw new Error(`HTTP Error: ${response.statusText}`);
+
+    const data = await response.json();
+    if (data.metadata?.result === 0) throw new Error(data.metadata.reason);
+
+    return data;
+  }
+
+  async create(args: ProvisioningArgs): Promise<ProvisionResult> {
+    const { service, server } = args;
+    const domain = service.domain?.name;
+    let username = service.username;
+
+    if (!username && domain) {
+      username = domain.split('.')[0].substring(0, 8).replace(/[^a-zA-Z0-9]/g, '') + Math.floor(Math.random() * 100);
+    }
+
+    const password = service.password || Math.random().toString(36).slice(-10) + 'A1!';
+    const plan = (service.product?.config as Record<string, unknown>)?.cpanel_package || 'default';
+    const contactemail = service.organization?.users?.[0]?.email;
+
+    if (!domain || !username || !password) {
+      throw new Error('Missing domain, username or password');
+    }
+
+    const data = await this.request<Record<string, unknown>>(server, 'createacct', { username, domain, password, plan: String(plan), contactemail });
+    return { status: 'success', username, password, data };
+  }
+
+  async suspend(args: ProvisioningArgs): Promise<ProvisionResult> {
+    const { service, server } = args;
+    if (!service.username) throw new Error('Missing username');
+    const data = await this.request<Record<string, unknown>>(server, 'suspendacct', { user: service.username, reason: 'Suspended by Hostito Billing' });
+    return { status: 'success', data };
+  }
+
+  async unsuspend(args: ProvisioningArgs): Promise<ProvisionResult> {
+    const { service, server } = args;
+    if (!service.username) throw new Error('Missing username');
+    const data = await this.request<Record<string, unknown>>(server, 'unsuspendacct', { user: service.username });
+    return { status: 'success', data };
+  }
+
+  async terminate(args: ProvisioningArgs): Promise<ProvisionResult> {
+    const { service, server } = args;
+    if (!service.username) throw new Error('Missing username');
+    const data = await this.request<Record<string, unknown>>(server, 'removeacct', { user: service.username });
+    return { status: 'success', data };
+  }
+
+  async pkg(args: ProvisioningArgs): Promise<ProvisionResult> {
+    const { service, server, newPackage } = args;
+    if (!service.username) throw new Error('Missing username');
+    const pkgName = (typeof newPackage === 'string' ? newPackage : ((newPackage as Record<string, unknown>)?.cpanel_package || newPackage));
+    const data = await this.request<Record<string, unknown>>(server, 'changepackage', { user: service.username, pkg: String(pkgName) });
+    return { status: 'success', data };
+  }
+
+  async passwd(args: ProvisioningArgs): Promise<ProvisionResult> {
+    const { service, server, password } = args;
+    if (!service.username) throw new Error('Missing username');
+    const data = await this.request<Record<string, unknown>>(server, 'passwd', { user: service.username, password: String(password) });
+    return { status: 'success', data };
+  }
+
+  async renew(args: ProvisioningArgs): Promise<ProvisionResult> {
+    // For cPanel, renew might just mean unsuspending or updating metadata
+    // In many cases, it's a no-op if the service was ACTIVE.
+    return { status: 'success', message: 'Account renewed successfully' };
+  }
+
+  async testConnection(server: Server, provisioner: Provisioner): Promise<boolean> {
+    try {
+      await this.request(server, 'version', {});
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}

@@ -5,18 +5,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './auth.dto';
-import { NotificationsHandler } from '../notifications/notifications.handler';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
-    private notificationHandler: NotificationsHandler,
+    private eventEmitter: EventEmitter2,
   ) { }
 
   /**
@@ -64,13 +64,9 @@ export class AuthService {
       },
     });
 
-    await this.notificationHandler.send({
-      type: 'email',
-      to: email,
-      template: 'verify_email',
-      data: {
-        verificationToken,
-      },
+    this.eventEmitter.emit('auth.registered', {
+      email,
+      verificationToken,
     });
 
     return {
@@ -231,18 +227,12 @@ export class AuthService {
       },
     });
 
-    const sendMail = await this.notificationHandler.send({
-      type: 'email',
-      to: email,
-      template: 'reset_password',
-      data: {
-        token,
-      },
+    this.eventEmitter.emit('auth.forgot-password', {
+      email,
+      token,
     });
 
-    if (!sendMail.status) {
-      throw new HttpException('Email system error', 500);
-    }
+
 
     return { message: 'Password reset email sent' };
   }
@@ -264,13 +254,9 @@ export class AuthService {
     });
 
     // Send welcome email
-    await this.notificationHandler.send({
-      type: 'email',
-      to: user.email,
-      template: 'welcome',
-      data: {
-        firstName: user.firstName,
-      },
+    this.eventEmitter.emit('auth.verified', {
+      email: user.email,
+      firstName: user.firstName,
     });
 
     return { message: 'Email verified successfully' };
@@ -292,18 +278,12 @@ export class AuthService {
       data: { verificationToken },
     });
 
-    const sendMail = await this.notificationHandler.send({
-      type: 'email',
-      to: email,
-      template: 'verify_email',
-      data: {
-        verificationToken,
-      },
+    this.eventEmitter.emit('auth.resend-verification', {
+      email,
+      verificationToken,
     });
 
-    if (!sendMail.status) {
-      throw new HttpException('Email system', 500);
-    }
+
 
     return { message: 'Verification email sent' };
   }

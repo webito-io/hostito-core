@@ -1,26 +1,76 @@
-import { Injectable } from '@nestjs/common';
-import { CreateProvisionerDto } from './dto/create-provisioner.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProvisionerDto } from './dto/update-provisioner.dto';
+
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProvisionersService {
-  create(createProvisionerDto: CreateProvisionerDto) {
-    return 'This action adds a new provisioner';
+  constructor(private readonly prisma: PrismaService) { }
+
+  async findAll(paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.provisioner.findMany({
+        skip,
+        take: limit,
+      }),
+      this.prisma.provisioner.count(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+      },
+    };
   }
 
-  findAll() {
-    return `This action returns all provisioners`;
+  async findOne(id: number) {
+    const provisioner = await this.prisma.provisioner.findUnique({
+      where: { id },
+    });
+
+    if (!provisioner) {
+      throw new NotFoundException(`Provisioner with ID ${id} not found`);
+    }
+
+    return provisioner;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} provisioner`;
+  async activate(id: number) {
+    const provisioner = await this.findOne(id);
+    const updatedProvisioner = await this.prisma.provisioner.update({
+      where: { id: provisioner.id },
+      data: { isActive: true },
+    });
+    return updatedProvisioner;
   }
 
-  update(id: number, updateProvisionerDto: UpdateProvisionerDto) {
-    return `This action updates a #${id} provisioner`;
+  async deactivate(id: number) {
+    const provisioner = await this.findOne(id);
+    const updatedProvisioner = await this.prisma.provisioner.update({
+      where: { id: provisioner.id },
+      data: { isActive: false },
+    });
+    return updatedProvisioner;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} provisioner`;
+  async configure(id: number, updateProvisionerDto: UpdateProvisionerDto) {
+    const provisioner = await this.findOne(id);
+    const updatedProvisioner = await this.prisma.provisioner.update({
+      where: { id: provisioner.id },
+      data: {
+        name: updateProvisionerDto.name,
+        isActive: updateProvisionerDto.isActive,
+        config: updateProvisionerDto.config as Prisma.InputJsonValue,
+      },
+    });
+    return updatedProvisioner;
   }
 }
