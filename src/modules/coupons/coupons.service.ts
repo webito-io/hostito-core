@@ -6,7 +6,7 @@ import { FindCouponDto } from './dto/find-coupons.dto';
 
 @Injectable()
 export class CouponsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createCouponDto: CreateCouponDto) {
     const coupon = await this.prisma.coupon.create({

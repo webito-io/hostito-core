@@ -69,18 +69,20 @@ async function main() {
   });
 
   await prisma.role.upsert({
-    where: { name: 'SuperAdmin' },
+    where: { id: 10 },
     update: {},
     create: {
+      id: 10,
       name: 'SuperAdmin',
       permissions: { connect: adminPerms.map((p) => ({ id: p.id })) },
     },
   });
 
   await prisma.role.upsert({
-    where: { name: 'User' },
+    where: { id: 100 },
     update: {},
     create: {
+      id: 100,
       name: 'User',
       permissions: { connect: userPerms.map((p) => ({ id: p.id })) },
     },
@@ -100,19 +102,15 @@ async function main() {
   });
 
   // --- 5. Organizations ---
-  const orgName = 'Default Organization';
-  let org = await prisma.organization.findFirst({
-    where: { name: orgName },
+  const org = await prisma.organization.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: 'Default Organization',
+      currencyId: currency.id,
+    },
   });
-
-  if (!org) {
-    org = await prisma.organization.create({
-      data: {
-        name: orgName,
-        currencyId: currency.id,
-      },
-    });
-  }
 
   // --- 6. Super Admin User ---
   const adminEmail = process.env.ADMIN_EMAIL;
@@ -128,8 +126,8 @@ async function main() {
         password: hashedPassword,
         firstName: 'Super',
         lastName: 'Admin',
-        role: { connect: { name: 'SuperAdmin' } },
-        organization: { connect: { id: org.id } },
+        roleId: 10, // SuperAdmin Role ID
+        organizationId: org.id,
         status: 'ACTIVE',
         emailVerified: true,
       },

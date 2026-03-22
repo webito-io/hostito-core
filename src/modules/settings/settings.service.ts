@@ -4,7 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SettingsService {
-  constructor(private readonly prisma: PrismaService) {}
+
+  constructor(private readonly prisma: PrismaService) { }
 
   async get() {
     return await this.prisma.setting.findMany();
@@ -13,8 +14,8 @@ export class SettingsService {
   async getPublic() {
     const settings = await this.prisma.setting.findMany({
       where: {
-        isPublic: true,
-      },
+        isPublic: true
+      }
     });
 
     return settings.reduce((acc, setting) => {
@@ -26,7 +27,7 @@ export class SettingsService {
   async update(key: string, updateSettingDto: UpdateSettingDto) {
     return await this.prisma.setting.upsert({
       where: {
-        key,
+        key
       },
       update: {
         value: updateSettingDto.value,
@@ -36,7 +37,7 @@ export class SettingsService {
         key: key,
         value: updateSettingDto.value,
         isPublic: updateSettingDto.isPublic ?? false,
-      },
+      }
     });
   }
 }

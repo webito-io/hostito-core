@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException,
+  NotFoundException
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InvoiceStatus, User } from '@prisma/client';
@@ -47,13 +47,14 @@ export class OrdersService {
         },
         data: {
           status: 'PROCESSING',
-        },
+        }
       });
 
       const cartItems = await prisma.cartItem.findMany({
         where: {
           cartId: cart.id,
         },
+
       });
       if (!cartItems.length) {
         throw new NotFoundException('Cart is empty');
@@ -64,6 +65,7 @@ export class OrdersService {
       let discount = 0;
       let tax = 0;
       const orderItemsWithProduct: any[] = [];
+
 
       /* get products batch */
       const productIds = cartItems.map((item) => item.productId);
@@ -77,34 +79,23 @@ export class OrdersService {
 
       /* calculate product prices batch */
       const productsPrices = await this.currencyConverter.convert(
-        products.map((product) => ({
-          id: product.id,
-          amount: product.price,
-          currencyId: product.currencyId,
-        })),
+        products.map((product) => ({ id: product.id, amount: product.price, currencyId: product.currencyId })),
         organization.currencyId,
       );
 
       for (const item of cartItems) {
+
         /* product validation */
-        const product = products.find(
-          (product) => product.id === item.productId,
-        );
+        const product = products.find((product) => product.id === item.productId);
         if (!product) {
-          throw new BadRequestException(
-            `Product #${item.productId} is no longer available`,
-          );
+          throw new BadRequestException(`Product #${item.productId} is no longer available`);
         }
         if (!product.isActive) {
-          throw new BadRequestException(
-            `Product "${product.name}" is not active`,
-          );
+          throw new BadRequestException(`Product "${product.name}" is not active`);
         }
 
         /* product price in new currency */
-        const priceNewCurrency = productsPrices.find(
-          (productPrice) => productPrice.id === product.id,
-        )?.amount;
+        const priceNewCurrency = productsPrices.find((productPrice) => productPrice.id === product.id)?.amount;
         if (!priceNewCurrency) {
           throw new BadRequestException(`Calculation failed`);
         }
@@ -181,24 +172,6 @@ export class OrdersService {
         },
       });
 
-      /* create pending domains */
-      const domainNames = orderItemsWithProduct
-        .filter(
-          (item) => item.product?.type === 'DOMAIN' && item.config?.domain,
-        )
-        .map((item) => item.config.domain);
-
-      if (domainNames.length > 0) {
-        await prisma.domain.createMany({
-          data: domainNames.map((name) => ({
-            name,
-            status: 'PENDING',
-            organizationId: organization.id,
-          })),
-          skipDuplicates: true,
-        });
-      }
-
       /* Clear cart */
       await prisma.cartItem.deleteMany({
         where: {
@@ -213,7 +186,7 @@ export class OrdersService {
         },
         data: {
           status: 'ACTIVE',
-        },
+        }
       });
 
       /* Invoice Creation */
@@ -256,7 +229,7 @@ export class OrdersService {
       return {
         order,
         invoice,
-        transaction,
+        transaction
       };
     });
 
@@ -345,7 +318,7 @@ export class OrdersService {
       order,
       invoice,
       transaction,
-      payment,
+      payment
     };
   }
 
@@ -361,9 +334,7 @@ export class OrdersService {
     const skip = (page - 1) * limit;
 
     const where = {
-      ...(!hasPermission(user, 'orders', 'read', 'all') && {
-        organizationId: user.organizationId,
-      }),
+      ...(!hasPermission(user, 'orders', 'read', 'all') && { organizationId: user.organizationId }),
     };
 
     const [orders, total] = await this.prisma.$transaction([
@@ -431,6 +402,7 @@ export class OrdersService {
       data: updateOrderDto,
     });
   }
+
 
   /**
    * Remove order

@@ -1,7 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AnnouncementsModule } from './modules/announcements/announcements.module';
@@ -26,8 +25,6 @@ import { ServicesModule } from './modules/services/services.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { TaxesModule } from './modules/taxes/taxes.module';
 import { UsersModule } from './modules/users/users.module';
-import { OutboxModule } from './modules/outbox/outbox.module';
-import { AutomationModule } from './modules/automation/automation.module';
 
 @Module({
   imports: [
@@ -51,13 +48,10 @@ import { AutomationModule } from './modules/automation/automation.module';
     CurrenciesModule,
     CartsModule,
     EventEmitterModule.forRoot(),
-    ScheduleModule.forRoot(),
-    OutboxModule,
-    AutomationModule,
     PaymentGatewaysModule,
     BullModule.forRoot({
       connection: {
-        url: process.env.REDIS_HOST_URL,
+        url: process.env.REDIS_HOST_URL
       },
     }),
     ProvisionersModule,
@@ -66,4 +60,4 @@ import { AutomationModule } from './modules/automation/automation.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
