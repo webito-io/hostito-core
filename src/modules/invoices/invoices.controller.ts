@@ -29,7 +29,7 @@ import { InvoiceEntity } from './entities/invoice.entity';
 @ApiTags('Invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) { }
+  constructor(private readonly invoicesService: InvoicesService) {}
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -55,7 +55,11 @@ export class InvoicesController {
     @Body() payInvoiceDto: PayInvoiceDto,
     @Req() req,
   ) {
-    return await this.invoicesService.pay(id, payInvoiceDto.gatewayId, req.user);
+    return await this.invoicesService.pay(
+      id,
+      payInvoiceDto.gatewayId,
+      req.user,
+    );
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

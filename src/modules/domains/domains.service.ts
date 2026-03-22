@@ -15,22 +15,24 @@ export class DomainsService {
     private readonly prisma: PrismaService,
     private readonly domainsFactory: DomainsFactory,
     private readonly domainsHandler: DomainsHandler,
-  ) { }
+  ) {}
 
   async check(domainName: string): Promise<CheckDomainDto> {
     const provider = this.domainsFactory.get(DomainProviderType.SPACESHIP);
-    if (!provider.availability) throw new Error('Provider does not support domain availability');
+    if (!provider.availability)
+      throw new Error('Provider does not support domain availability');
     const available = await provider.availability(domainName);
     return { domain: domainName, available };
   }
-
 
   async findAll(query: PaginationDto, user) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
     const where = {
-      ...(!hasPermission(user, 'domains', 'read', 'all') && { organizationId: user.organizationId }),
+      ...(!hasPermission(user, 'domains', 'read', 'all') && {
+        organizationId: user.organizationId,
+      }),
     };
 
     const [domains, total] = await this.prisma.$transaction([
@@ -41,9 +43,9 @@ export class DomainsService {
         where,
         include: {
           organization: {
-            select: { id: true, name: true }
-          }
-        }
+            select: { id: true, name: true },
+          },
+        },
       }),
       this.prisma.domain.count({ where }),
     ]);
@@ -54,16 +56,18 @@ export class DomainsService {
   async findOne(id: number, user) {
     const where = {
       id,
-      ...(!hasPermission(user, 'domains', 'read', 'all') && { organizationId: user.organizationId }),
+      ...(!hasPermission(user, 'domains', 'read', 'all') && {
+        organizationId: user.organizationId,
+      }),
     };
 
     const domain = await this.prisma.domain.findFirst({
       where,
       include: {
         organization: {
-          select: { id: true, name: true }
-        }
-      }
+          select: { id: true, name: true },
+        },
+      },
     });
 
     if (!domain) {
@@ -78,15 +82,22 @@ export class DomainsService {
 
     // 1. Sync with Registrar (Async via Queue)
     if (updateDomainDto.nameservers) {
-      await this.domainsHandler.executeAction(id, 'nameservers', { nameservers: updateDomainDto.nameservers });
+      await this.domainsHandler.executeAction(id, 'nameservers', {
+        nameservers: updateDomainDto.nameservers,
+      });
     }
 
     if (updateDomainDto.isLocked !== undefined) {
-      await this.domainsHandler.executeAction(id, updateDomainDto.isLocked ? 'lock' : 'unlock');
+      await this.domainsHandler.executeAction(
+        id,
+        updateDomainDto.isLocked ? 'lock' : 'unlock',
+      );
     }
 
     if (updateDomainDto.privacy !== undefined) {
-      await this.domainsHandler.executeAction(id, 'privacy', { enabled: updateDomainDto.privacy });
+      await this.domainsHandler.executeAction(id, 'privacy', {
+        enabled: updateDomainDto.privacy,
+      });
     }
 
     // 2. Update Local DB
@@ -97,7 +108,7 @@ export class DomainsService {
   }
 
   async remove(id: number, user) {
-    await this.findOne(id, user)
+    await this.findOne(id, user);
     return await this.prisma.domain.delete({
       where: { id },
     });

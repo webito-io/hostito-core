@@ -6,7 +6,7 @@ import { FindCouponDto } from './dto/find-coupons.dto';
 
 @Injectable()
 export class CouponsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createCouponDto: CreateCouponDto) {
     const coupon = await this.prisma.coupon.create({
@@ -16,7 +16,8 @@ export class CouponsService {
         value: createCouponDto.value,
         currencyId: createCouponDto.currencyId,
         maxUses: createCouponDto.maxUses,
-        expiresAt: createCouponDto.expiresAt && new Date(createCouponDto.expiresAt),
+        expiresAt:
+          createCouponDto.expiresAt && new Date(createCouponDto.expiresAt),
         isActive: createCouponDto.isActive ?? true,
       },
     });
@@ -57,7 +58,8 @@ export class CouponsService {
         value: updateCouponDto.value,
         currencyId: updateCouponDto.currencyId,
         maxUses: updateCouponDto.maxUses,
-        expiresAt: updateCouponDto.expiresAt && new Date(updateCouponDto.expiresAt),
+        expiresAt:
+          updateCouponDto.expiresAt && new Date(updateCouponDto.expiresAt),
         isActive: updateCouponDto.isActive,
       },
     });

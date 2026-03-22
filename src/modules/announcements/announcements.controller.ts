@@ -11,7 +11,13 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse, ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AnnouncementsService } from './announcements.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
@@ -25,7 +31,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 @ApiTags('Announcements')
 @Controller('announcements')
 export class AnnouncementsController {
-  constructor(private readonly announcementsService: AnnouncementsService) { }
+  constructor(private readonly announcementsService: AnnouncementsService) {}
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -40,7 +46,9 @@ export class AnnouncementsController {
   @UseGuards(OptionalAuthGuard)
   @ApiBearerAuth()
   @Get()
-  @ApiOperation({ summary: 'List all announcements with pagination and filter' })
+  @ApiOperation({
+    summary: 'List all announcements with pagination and filter',
+  })
   @ApiOkResponse({ type: [Announcement] })
   async findAll(@Query() query: PaginationDto, @Req() req) {
     return this.announcementsService.findAll(query, req.user);
@@ -73,7 +81,9 @@ export class AnnouncementsController {
   @RequirePermission('announcements', 'delete', 'all')
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an announcement' })
-  @ApiOkResponse({ description: 'The announcement has been successfully deleted' })
+  @ApiOkResponse({
+    description: 'The announcement has been successfully deleted',
+  })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.announcementsService.remove(id);
   }

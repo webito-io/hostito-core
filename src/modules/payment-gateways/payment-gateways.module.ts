@@ -7,11 +7,8 @@ import { StripeProvider } from './providers/stripe/stripe.provider';
 import { PaypalProvider } from './providers/paypal/paypal.provider';
 import { CryptoProvider } from './providers/crypto/crypto.provider';
 import { PaymentGatewaysHandler } from './payment-gateways.handler';
-import { ProvisionersModule } from '../provisioners/provisioners.module';
-import { DomainsModule } from '../domains/domains.module';
 
 @Module({
-  imports: [ProvisionersModule, DomainsModule],
   controllers: [PaymentGatewaysController, PaymentsController],
   providers: [
     PaymentGatewaysService,
@@ -19,8 +16,8 @@ import { DomainsModule } from '../domains/domains.module';
     PaymentGatewaysHandler,
     StripeProvider,
     PaypalProvider,
-    CryptoProvider
+    CryptoProvider,
   ],
-  exports: [PaymentGatewaysHandler]
+  exports: [PaymentGatewaysHandler],
 })
-export class PaymentGatewaysModule { }
+export class PaymentGatewaysModule {}

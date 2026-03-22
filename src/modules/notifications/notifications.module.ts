@@ -12,11 +12,11 @@ import { NotificationsWorker } from './notifications.worker';
     }),
   ],
   providers: [
-    NotificationFactory, 
-    SmtpProvider, 
+    NotificationFactory,
+    SmtpProvider,
     NotificationsHandler,
     NotificationsWorker,
   ],
   exports: [NotificationsHandler],
 })
-export class NotificationsModule { }
+export class NotificationsModule {}

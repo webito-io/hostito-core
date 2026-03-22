@@ -9,7 +9,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class CurrenciesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
     /* Create default currency if it doesn't exist */
@@ -58,7 +58,9 @@ export class CurrenciesService {
     const skip = (page - 1) * limit;
 
     const where = {
-      ...(!hasPermission(user, 'currencies', 'read', 'all') && { isActive: true }),
+      ...(!hasPermission(user, 'currencies', 'read', 'all') && {
+        isActive: true,
+      }),
     };
 
     const [currencies, total] = await this.prisma.$transaction([
@@ -90,7 +92,8 @@ export class CurrenciesService {
       where: { id },
       select: currencySelect,
     });
-    if (!currency) throw new NotFoundException(`Currency with ID ${id} not found`);
+    if (!currency)
+      throw new NotFoundException(`Currency with ID ${id} not found`);
     return currency;
   }
 
@@ -102,7 +105,8 @@ export class CurrenciesService {
    */
   async update(id: number, updateCurrencyDto: UpdateCurrencyDto) {
     const currency = await this.prisma.currency.findUnique({ where: { id } });
-    if (!currency) throw new NotFoundException(`Currency with ID ${id} not found`);
+    if (!currency)
+      throw new NotFoundException(`Currency with ID ${id} not found`);
     return this.prisma.currency.update({
       where: { id },
       data: {
@@ -124,7 +128,8 @@ export class CurrenciesService {
    */
   async remove(id: number) {
     const currency = await this.prisma.currency.findUnique({ where: { id } });
-    if (!currency) throw new NotFoundException(`Currency with ID ${id} not found`);
+    if (!currency)
+      throw new NotFoundException(`Currency with ID ${id} not found`);
     return this.prisma.currency.delete({ where: { id } });
   }
 }

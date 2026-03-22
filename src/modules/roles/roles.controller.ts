@@ -28,7 +28,7 @@ import { RolesService } from './roles.service';
 @ApiBearerAuth()
 @Controller('roles')
 export class RolesController {
-  constructor(private readonly rolesService: RolesService) { }
+  constructor(private readonly rolesService: RolesService) {}
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @RequirePermission('roles', 'create', 'all')
@@ -106,5 +106,4 @@ export class RolesController {
   async remove(@Param('id') id: string) {
     return await this.rolesService.remove(+id);
   }
-
 }

@@ -6,7 +6,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  MinLength
+  MinLength,
 } from 'class-validator';
 import { Status } from '@prisma/client';
 

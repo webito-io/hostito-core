@@ -30,6 +30,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/schedule": "^6.1.1",
     "@nestjs/swagger": "^11.2.6",
     "@paypal/paypal-server-sdk": "^2.2.0",
     "@prisma/adapter-pg": "^7.4.2",

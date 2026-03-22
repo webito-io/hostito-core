@@ -1,4 +1,13 @@
-import { Domain, Organization, Product, Provisioner, Server, Service, ServiceStatus, User } from '@prisma/client';
+import {
+  Domain,
+  Organization,
+  Product,
+  Provisioner,
+  Server,
+  Service,
+  ServiceStatus,
+  User,
+} from '@prisma/client';
 
 export interface ProvisionResult {
   status: 'success' | 'failed';
@@ -32,7 +41,6 @@ export interface ProvisionerProvider {
   renew?(args: ProvisioningArgs): Promise<ProvisionResult>;
   testConnection?(server: Server, provisioner: Provisioner): Promise<boolean>;
 }
-
 
 export enum ProvisionerType {
   CPANEL = 'cpanel',

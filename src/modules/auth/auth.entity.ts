@@ -10,6 +10,8 @@ export class AuthResponse {
 }
 
 export class MessageResponse {
-  @ApiProperty({ description: 'A message indicating the result of the operation' })
+  @ApiProperty({
+    description: 'A message indicating the result of the operation',
+  })
   message: string;
 }

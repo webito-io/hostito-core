@@ -1,5 +1,19 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { PermissionsGuard } from 'src/common/guards/permission.guard';
@@ -10,7 +24,7 @@ import { ProvisionersService } from './provisioners.service';
 @ApiTags('Provisioners')
 @Controller('provisioners')
 export class ProvisionersController {
-  constructor(private readonly provisionersService: ProvisionersService) { }
+  constructor(private readonly provisionersService: ProvisionersService) {}
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -50,7 +64,7 @@ export class ProvisionersController {
   @ApiResponse({ status: 200, description: 'Provisioner configured' })
   configure(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateProvisionerDto: UpdateProvisionerDto
+    @Body() updateProvisionerDto: UpdateProvisionerDto,
   ) {
     return this.provisionersService.configure(id, updateProvisionerDto);
   }

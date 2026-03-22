@@ -1,5 +1,21 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Query, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { DomainsService } from './domains.service';
@@ -10,7 +26,7 @@ import { CheckDomainDto } from './dto/check-domain.dto';
 @ApiTags('Domains')
 @Controller('domains')
 export class DomainsController {
-  constructor(private readonly domainsService: DomainsService) { }
+  constructor(private readonly domainsService: DomainsService) {}
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
@@ -44,7 +60,11 @@ export class DomainsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a domain by ID' })
   @ApiResponse({ status: 200, type: DomainEntity })
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateDomainDto: UpdateDomainDto, @Req() req) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDomainDto: UpdateDomainDto,
+    @Req() req,
+  ) {
     return await this.domainsService.update(id, updateDomainDto, req.user);
   }
 

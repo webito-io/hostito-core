@@ -1,19 +1,30 @@
-import { PaymentGateway, Transaction } from "@prisma/client";
+import { PaymentGateway, Transaction } from '@prisma/client';
 
 export class PaypalProvider {
-    constructor() { }
+  constructor() {}
 
-    // TODO: Implement initiate and verify methods
-    // TODO: Vibe Coded, should be check
+  // TODO: Implement initiate and verify methods
+  // TODO: Vibe Coded, should be check
 
-    async initiate({ gateway, amount, currency, transactionId }: { gateway: PaymentGateway, amount: number, currency: string, transactionId: number }) {
-    }
+  async initiate({
+    gateway,
+    amount,
+    currency,
+    transactionId,
+  }: {
+    gateway: PaymentGateway;
+    amount: number;
+    currency: string;
+    transactionId: number;
+  }) {}
 
-    async verify(transaction: Transaction, data) {
-    }
+  async verify(transaction: Transaction, data) {}
 
-    async webhook(gateway: PaymentGateway, headers: any, rawBody: Buffer) {
-        // TODO: Implement PayPal webhook verification
-        return { status: 'success', transactionId: undefined as number | undefined };
-    }
+  async webhook(gateway: PaymentGateway, headers: any, rawBody: Buffer) {
+    // TODO: Implement PayPal webhook verification
+    return {
+      status: 'success',
+      transactionId: undefined as number | undefined,
+    };
+  }
 }

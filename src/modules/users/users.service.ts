@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,7 +9,7 @@ import { userSelect } from './selects/user.select';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Create a new user
@@ -79,7 +76,12 @@ export class UsersService {
     const skip = (pageNumber - 1) * pageSize;
 
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({ skip, take: pageSize, select: userSelect, orderBy: { createdAt: 'desc' } }),
+      this.prisma.user.findMany({
+        skip,
+        take: pageSize,
+        select: userSelect,
+        orderBy: { createdAt: 'desc' },
+      }),
       this.prisma.user.count(),
     ]);
 

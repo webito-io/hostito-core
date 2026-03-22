@@ -10,10 +10,7 @@ import { SpaceshipProvider } from './providers/spaceship/spaceship.provider';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
-  imports: [
-    BullModule.registerQueue({ name: 'domains' }),
-    AuditLogsModule,
-  ],
+  imports: [BullModule.registerQueue({ name: 'domains' }), AuditLogsModule],
   controllers: [DomainsController],
   providers: [
     DomainsService,

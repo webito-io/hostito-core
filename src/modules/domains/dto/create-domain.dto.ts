@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsBoolean, IsOptional, IsInt, IsEnum, IsDateString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsInt,
+  IsEnum,
+  IsDateString,
+} from 'class-validator';
 
 export class CreateDomainDto {
   @ApiProperty({ example: 'example.com' })
@@ -7,7 +15,9 @@ export class CreateDomainDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ enum: ['PENDING', 'ACTIVE', 'EXPIRED', 'CANCELLED', 'TRANSFERRED'] })
+  @ApiPropertyOptional({
+    enum: ['PENDING', 'ACTIVE', 'EXPIRED', 'CANCELLED', 'TRANSFERRED'],
+  })
   @IsString()
   @IsOptional()
   status?: any; // Avoiding direct prisma enum import

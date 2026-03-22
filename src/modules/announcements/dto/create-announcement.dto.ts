@@ -7,7 +7,9 @@ export class CreateAnnouncementDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ example: 'We will be performing scheduled network maintenance.' })
+  @ApiProperty({
+    example: 'We will be performing scheduled network maintenance.',
+  })
   @IsString()
   @IsNotEmpty()
   content: string;

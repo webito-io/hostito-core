@@ -7,7 +7,10 @@ export class DomainEntity {
   @ApiProperty({ example: 'example.com' })
   name: string;
 
-  @ApiProperty({ example: 'PENDING', enum: ['PENDING', 'ACTIVE', 'EXPIRED', 'CANCELLED', 'TRANSFERRED'] })
+  @ApiProperty({
+    example: 'PENDING',
+    enum: ['PENDING', 'ACTIVE', 'EXPIRED', 'CANCELLED', 'TRANSFERRED'],
+  })
   status: string;
 
   @ApiProperty({ example: 'resellerclub', required: false })

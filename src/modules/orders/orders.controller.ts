@@ -30,7 +30,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) { }
+  constructor(private readonly ordersService: OrdersService) {}
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()

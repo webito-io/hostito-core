@@ -6,7 +6,10 @@ import { CouponsCalculator } from '../coupons/coupons.calculator';
 
 @Injectable()
 export class CartsService {
-  constructor(private readonly prisma: PrismaService, private readonly couponsCalculator: CouponsCalculator) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly couponsCalculator: CouponsCalculator,
+  ) {}
 
   /**
    * Add a product to the cart
@@ -60,8 +63,6 @@ export class CartsService {
    * @returns
    */
   async findOne(currentUser: User, couponCode?: string) {
-
-
     const organization = await this.prisma.organization.findUnique({
       where: { id: currentUser.organizationId },
     });
@@ -75,7 +76,7 @@ export class CartsService {
       },
       include: { items: { include: { product: true } } },
     });
-    if(!cart) {
+    if (!cart) {
       return { total: 0, discount: 0, tax: 0, subtotal: 0 };
     }
 
@@ -122,8 +123,6 @@ export class CartsService {
     const sumRate = taxRates.reduce((acc, t) => acc + t.rate, 0);
     tax = total * (sumRate / 100);
     total += tax;
-
-
 
     if (!cart) {
       throw new NotFoundException('Cart not found');

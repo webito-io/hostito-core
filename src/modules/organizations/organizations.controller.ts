@@ -29,7 +29,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 @ApiTags('Organizations')
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) { }
+  constructor(private readonly organizationsService: OrganizationsService) {}
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -97,7 +97,10 @@ export class OrganizationsController {
   @RequirePermission('organizations', 'delete', 'all')
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an organization by ID' })
-  @ApiResponse({ status: 200, description: 'Organization deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Organization deleted successfully',
+  })
   @ApiResponse({ status: 404, description: 'Organization not found' })
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return await this.organizationsService.remove(id, req.user);

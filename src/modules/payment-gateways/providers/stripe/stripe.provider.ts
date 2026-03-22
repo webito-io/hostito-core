@@ -1,5 +1,5 @@
-import { PaymentGateway, Transaction } from "@prisma/client";
-import Stripe from "stripe";
+import { PaymentGateway, Transaction } from '@prisma/client';
+import Stripe from 'stripe';
 
 interface StripeConfig {
   successUrl: string;
@@ -9,10 +9,17 @@ interface StripeConfig {
 }
 
 export class StripeProvider {
-
-
-  async initiate({ gateway, amount, currency, transactionId }: { gateway: PaymentGateway, amount: number, currency: string, transactionId: number }) {
-
+  async initiate({
+    gateway,
+    amount,
+    currency,
+    transactionId,
+  }: {
+    gateway: PaymentGateway;
+    amount: number;
+    currency: string;
+    transactionId: number;
+  }) {
     const config = gateway.config as unknown as StripeConfig;
 
     const stripeClient = new Stripe(config.secretKey, {
@@ -39,18 +46,17 @@ export class StripeProvider {
       client_reference_id: transactionId.toString(),
       metadata: {
         transactionId: transactionId.toString(),
-      }
+      },
     });
 
     return {
       status: session.status === 'open',
       url: session.url,
-      sessionId: session.id
+      sessionId: session.id,
     };
   }
 
-  async verify(transaction: Transaction, data) {
-  }
+  async verify(transaction: Transaction, data) {}
 
   async webhook(gateway: PaymentGateway, headers: any, rawBody: Buffer) {
     const sig = headers['stripe-signature'];
@@ -65,11 +71,16 @@ export class StripeProvider {
       const event = stripeClient.webhooks.constructEvent(
         rawBody,
         sig,
-        config.webhookSecret
+        config.webhookSecret,
       );
 
       const session = event.data.object as Stripe.Checkout.Session;
-      return { status: 'success', transactionId: session.client_reference_id ? Number(session.client_reference_id) : undefined };
+      return {
+        status: 'success',
+        transactionId: session.client_reference_id
+          ? Number(session.client_reference_id)
+          : undefined,
+      };
     } catch (err) {
       return { status: 'failed', error: err.message };
     }

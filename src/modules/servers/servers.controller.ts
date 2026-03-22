@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, ParseIntPipe } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ServersService } from './servers.service';
 import { CreateServerDto } from './dto/create-server.dto';
 import { UpdateServerDto } from './dto/update-server.dto';
@@ -49,7 +65,10 @@ export class ServersController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a server by ID' })
   @ApiResponse({ status: 200, description: 'Server updated successfully' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateServerDto: UpdateServerDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateServerDto: UpdateServerDto,
+  ) {
     return this.serversService.update(id, updateServerDto);
   }
 

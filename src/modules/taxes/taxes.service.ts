@@ -6,7 +6,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class TaxesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createTaxDto: CreateTaxDto) {
     return await this.prisma.tax.create({

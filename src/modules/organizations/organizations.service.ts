@@ -9,7 +9,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createOrganizationDto: CreateOrganizationDto) {
     const { users, currencyId, name } = createOrganizationDto;
@@ -19,8 +19,8 @@ export class OrganizationsService {
         currency: { connect: { id: currencyId } },
         ...(users
           ? {
-            users: { connect: users.map((userId) => ({ id: userId })) },
-          }
+              users: { connect: users.map((userId) => ({ id: userId })) },
+            }
           : {}),
       },
       select: organizationSelect,
@@ -32,7 +32,9 @@ export class OrganizationsService {
     const skip = (page - 1) * limit;
 
     const where = {
-      ...(!hasPermission(user, 'organizations', 'read', 'all') && { id: user.organizationId }),
+      ...(!hasPermission(user, 'organizations', 'read', 'all') && {
+        id: user.organizationId,
+      }),
     };
 
     const [organizations, total] = await this.prisma.$transaction([
@@ -71,8 +73,8 @@ export class OrganizationsService {
         currencyId,
         ...(users
           ? {
-            users: { connect: users.map((userId) => ({ id: userId })) },
-          }
+              users: { connect: users.map((userId) => ({ id: userId })) },
+            }
           : {}),
       },
       select: organizationSelect,

@@ -11,7 +11,9 @@ export class DomainsWorker extends WorkerHost {
     private readonly prisma: PrismaService,
     private readonly domainsFactory: DomainsFactory,
     private readonly eventEmitter: EventEmitter2,
-  ) { super(); }
+  ) {
+    super();
+  }
 
   async process(job: Job): Promise<any> {
     const { domainId, action, extraArgs } = job.data;
@@ -21,10 +23,14 @@ export class DomainsWorker extends WorkerHost {
     });
 
     // Strategy: Default to Spaceship or use registrar from DB
-    const registrar = (domain.registrar || DomainProviderType.SPACESHIP) as DomainProviderType;
+    const registrar = (domain.registrar ||
+      DomainProviderType.SPACESHIP) as DomainProviderType;
     const provider = this.domainsFactory.get(registrar);
 
-    const result = await (provider[action] as Function)({ domain, ...extraArgs });
+    const result = await (provider[action] as Function)({
+      domain,
+      ...extraArgs,
+    });
 
     if (result.status === 'success') {
       // For registration, we update status to ACTIVE
@@ -40,7 +46,7 @@ export class DomainsWorker extends WorkerHost {
         action: action,
         status: 'success',
         organizationId: domain.organizationId,
-        userId: domain.organization.users[0]?.id
+        userId: domain.organization.users[0]?.id,
       });
     }
     return result;

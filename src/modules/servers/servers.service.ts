@@ -6,7 +6,7 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class ServersService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createServerDto: CreateServerDto) {
     return this.prisma.server.create({

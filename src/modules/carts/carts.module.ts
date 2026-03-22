@@ -9,4 +9,4 @@ import { CurrenciesModule } from '../currencies/currencies.module';
   controllers: [CartsController],
   providers: [CartsService],
 })
-export class CartsModule { }
+export class CartsModule {}

@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsInt, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateServerDto {
   @ApiProperty({ description: 'Internal name of the server' })
@@ -22,7 +29,9 @@ export class CreateServerDto {
   @IsInt()
   port?: number;
 
-  @ApiPropertyOptional({ description: 'JSON credentials like { username, apiToken }' })
+  @ApiPropertyOptional({
+    description: 'JSON credentials like { username, apiToken }',
+  })
   @IsOptional()
   @IsObject()
   credentials?: Record<string, any>;
@@ -32,7 +41,9 @@ export class CreateServerDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({ description: 'Maximum accounts allowed before filling up' })
+  @ApiPropertyOptional({
+    description: 'Maximum accounts allowed before filling up',
+  })
   @IsOptional()
   @IsInt()
   maxAccounts?: number;

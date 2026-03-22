@@ -6,7 +6,7 @@ export class AppService {
     return {
       message: 'Hostito Core API',
       version: '0.1.0',
-      docs: `/api`
+      docs: `/api`,
     };
   }
 }

@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PermissionsGuard } from 'src/common/guards/permission.guard';
@@ -12,7 +28,9 @@ import { NotificationTemplateEntity } from './entities/notification-template.ent
 @ApiTags('Notification Templates')
 @Controller('notification-templates')
 export class NotificationTemplatesController {
-  constructor(private readonly notificationTemplatesService: NotificationTemplatesService) {}
+  constructor(
+    private readonly notificationTemplatesService: NotificationTemplatesService,
+  ) {}
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -20,8 +38,12 @@ export class NotificationTemplatesController {
   @Post()
   @ApiOperation({ summary: 'Create a new notification template' })
   @ApiResponse({ status: 201, type: NotificationTemplateEntity })
-  async create(@Body() createNotificationTemplateDto: CreateNotificationTemplateDto) {
-    return await this.notificationTemplatesService.create(createNotificationTemplateDto);
+  async create(
+    @Body() createNotificationTemplateDto: CreateNotificationTemplateDto,
+  ) {
+    return await this.notificationTemplatesService.create(
+      createNotificationTemplateDto,
+    );
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -50,8 +72,14 @@ export class NotificationTemplatesController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update an notification template by ID' })
   @ApiResponse({ status: 200, type: NotificationTemplateEntity })
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateNotificationTemplateDto: UpdateNotificationTemplateDto) {
-    return await this.notificationTemplatesService.update(id, updateNotificationTemplateDto);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateNotificationTemplateDto: UpdateNotificationTemplateDto,
+  ) {
+    return await this.notificationTemplatesService.update(
+      id,
+      updateNotificationTemplateDto,
+    );
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)

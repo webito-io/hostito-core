@@ -7,7 +7,7 @@ import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 
 @Injectable()
 export class AnnouncementsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createAnnouncementDto: CreateAnnouncementDto) {
     return this.prisma.announcement.create({
@@ -19,7 +19,8 @@ export class AnnouncementsService {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
-    const canViewAll = currentUser && hasPermission(currentUser, 'announcements', 'read', 'all');
+    const canViewAll =
+      currentUser && hasPermission(currentUser, 'announcements', 'read', 'all');
 
     const where = {
       ...(!canViewAll && { isActive: true }),
@@ -39,12 +40,13 @@ export class AnnouncementsService {
   }
 
   async findOne(id: number, currentUser?) {
-    const canViewAll = currentUser && hasPermission(currentUser, 'announcements', 'read', 'all');
+    const canViewAll =
+      currentUser && hasPermission(currentUser, 'announcements', 'read', 'all');
 
     const announcement = await this.prisma.announcement.findFirst({
       where: {
         id,
-        ...(!canViewAll && { isActive: true })
+        ...(!canViewAll && { isActive: true }),
       },
     });
     if (!announcement) {
@@ -54,7 +56,13 @@ export class AnnouncementsService {
   }
 
   async update(id: number, updateAnnouncementDto: UpdateAnnouncementDto) {
-    const announcement = await this.findOne(id, { role: { permissions: [{ resource: 'announcements', action: 'read', scope: 'all' }] } }); // Hack to bypass the isActive check for update
+    const announcement = await this.findOne(id, {
+      role: {
+        permissions: [
+          { resource: 'announcements', action: 'read', scope: 'all' },
+        ],
+      },
+    }); // Hack to bypass the isActive check for update
     if (!announcement) {
       throw new NotFoundException(`Announcement #${id} not found`);
     }
@@ -66,8 +74,11 @@ export class AnnouncementsService {
 
   // Refined findOne for internal use
   private async findById(id: number) {
-    const announcement = await this.prisma.announcement.findUnique({ where: { id } });
-    if (!announcement) throw new NotFoundException(`Announcement #${id} not found`);
+    const announcement = await this.prisma.announcement.findUnique({
+      where: { id },
+    });
+    if (!announcement)
+      throw new NotFoundException(`Announcement #${id} not found`);
     return announcement;
   }
 

@@ -10,4 +10,4 @@ import { CurrenciesModule } from '../currencies/currencies.module';
   providers: [CouponsService, CouponsCalculator],
   exports: [CouponsCalculator],
 })
-export class CouponsModule { }
+export class CouponsModule {}

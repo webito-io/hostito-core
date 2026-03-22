@@ -6,7 +6,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class RolesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /*
     This function creates a new role.

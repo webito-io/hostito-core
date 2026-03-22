@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -14,7 +18,7 @@ export class InvoicesService {
     private prisma: PrismaService,
     private emitter: EventEmitter2,
     private paymentGatewaysHandler: PaymentGatewaysHandler,
-  ) { }
+  ) {}
 
   /**
    * Creates a new invoice with associated items and a payment transaction.
@@ -38,8 +42,11 @@ export class InvoicesService {
         select: invoiceSelect,
       });
 
-      if (!createInvoiceDto.gatewayId && hasPermission(user, 'invoices', 'update', 'all')) {
-        return { invoice: createdInvoice }
+      if (
+        !createInvoiceDto.gatewayId &&
+        hasPermission(user, 'invoices', 'update', 'all')
+      ) {
+        return { invoice: createdInvoice };
       }
 
       /* Create a payment transaction for the invoice */
@@ -210,14 +217,16 @@ export class InvoicesService {
           shipping: updateInvoiceDto.shipping,
           status: updateInvoiceDto.status,
           dueDate: updateInvoiceDto.dueDate,
-          items: updateInvoiceDto.items ? {
-            create: updateInvoiceDto.items.map((item) => ({
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-            })),
-          } : undefined,
+          items: updateInvoiceDto.items
+            ? {
+                create: updateInvoiceDto.items.map((item) => ({
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  total: item.total,
+                })),
+              }
+            : undefined,
         },
         select: invoiceSelect,
       });

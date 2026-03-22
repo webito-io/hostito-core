@@ -1,5 +1,10 @@
 import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UpdateSettingDto } from './dto/update-setting.dto';
 import { SettingsService } from './settings.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -10,7 +15,7 @@ import { SettingEntity } from './entities/setting.entity';
 @ApiTags('Settings')
 @Controller('settings')
 export class SettingsController {
-  constructor(private readonly settingsService: SettingsService) { }
+  constructor(private readonly settingsService: SettingsService) {}
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -24,7 +29,10 @@ export class SettingsController {
 
   @Get('public')
   @ApiOperation({ summary: 'Get public settings (Unauthenticated)' })
-  @ApiResponse({ status: 200, description: 'Key-Value pair object of public settings' })
+  @ApiResponse({
+    status: 200,
+    description: 'Key-Value pair object of public settings',
+  })
   async getPublic() {
     return await this.settingsService.getPublic();
   }
@@ -35,7 +43,10 @@ export class SettingsController {
   @Patch(':key')
   @ApiOperation({ summary: 'Update or create a setting by its key' })
   @ApiResponse({ status: 200, type: SettingEntity })
-  async update(@Param('key') key: string, @Body() updateSettingDto: UpdateSettingDto) {
+  async update(
+    @Param('key') key: string,
+    @Body() updateSettingDto: UpdateSettingDto,
+  ) {
     return await this.settingsService.update(key, updateSettingDto);
   }
 }

@@ -1,3 +1,3 @@
-import { PaginationDto } from "src/common/dto/pagination.dto";
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
-export class FindCouponDto extends PaginationDto { }
+export class FindCouponDto extends PaginationDto {}

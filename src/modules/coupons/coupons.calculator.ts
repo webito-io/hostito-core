@@ -4,9 +4,7 @@ import { CurrenciesCalculator } from '../currencies/currencies.calculator';
 
 @Injectable()
 export class CouponsCalculator {
-  constructor(
-    private readonly currencyConverter: CurrenciesCalculator,
-  ) { }
+  constructor(private readonly currencyConverter: CurrenciesCalculator) {}
 
   /**
    * Calculate the discount amount for a coupon
@@ -42,10 +40,18 @@ export class CouponsCalculator {
       let amount = coupon.value;
 
       if (coupon.currencyId && coupon.currencyId !== currencyId) {
-        amount = (await this.currencyConverter.convert(
-          [{ id: coupon.currencyId, amount: coupon.value, currencyId: coupon.currencyId }],
-          currencyId,
-        ))[0].amount;
+        amount = (
+          await this.currencyConverter.convert(
+            [
+              {
+                id: coupon.currencyId,
+                amount: coupon.value,
+                currencyId: coupon.currencyId,
+              },
+            ],
+            currencyId,
+          )
+        )[0].amount;
       }
 
       return Math.min(amount, subTotal);

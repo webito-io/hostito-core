@@ -10,7 +10,11 @@ export class CreateTaxDto {
   @IsNumber()
   rate: number;
 
-  @ApiProperty({ description: 'Is the tax active', example: true, required: false })
+  @ApiProperty({
+    description: 'Is the tax active',
+    example: true,
+    required: false,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

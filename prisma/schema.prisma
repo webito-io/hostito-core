@@ -443,3 +443,22 @@ model Setting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model OutboxEvent {
+  id          Int              @id @default(autoincrement())
+  type        String           // provisioner, domain, notification, event
+  queue       String           // BullMQ queue name
+  jobName     String           // BullMQ job name
+  payload     Json             // serialized job data
+  status      OutboxEventStatus @default(PENDING)
+  retries     Int              @default(0)
+  lastError   String?
+  processedAt DateTime?
+  createdAt   DateTime         @default(now())
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}

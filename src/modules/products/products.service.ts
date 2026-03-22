@@ -12,7 +12,7 @@ import { productSelect } from './selects/product.select';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Create a product

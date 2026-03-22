@@ -28,7 +28,7 @@ import { TaxesService } from './taxes.service';
 @ApiTags('Taxes')
 @Controller('taxes')
 export class TaxesController {
-  constructor(private readonly taxesService: TaxesService) { }
+  constructor(private readonly taxesService: TaxesService) {}
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()
@@ -49,7 +49,11 @@ export class TaxesController {
   @RequirePermission('taxes', 'read', 'all')
   @Get()
   @ApiOperation({ summary: 'Get all taxes' })
-  @ApiResponse({ status: 200, description: 'Return all taxes', type: [TaxEntity] })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all taxes',
+    type: [TaxEntity],
+  })
   async findAll(@Query() query: PaginationDto) {
     return await this.taxesService.findAll(query);
   }
@@ -59,7 +63,11 @@ export class TaxesController {
   @RequirePermission('taxes', 'read', 'all')
   @Get(':id')
   @ApiOperation({ summary: 'Get a tax by ID' })
-  @ApiResponse({ status: 200, description: 'Return a single tax', type: TaxEntity })
+  @ApiResponse({
+    status: 200,
+    description: 'Return a single tax',
+    type: TaxEntity,
+  })
   @ApiResponse({ status: 404, description: 'Tax not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.taxesService.findOne(id);

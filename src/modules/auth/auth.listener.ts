@@ -7,11 +7,16 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 export class AuthListener {
   constructor(
     private readonly notificationsHandler: NotificationsHandler,
-    private readonly auditService: AuditLogsService
+    private readonly auditService: AuditLogsService,
   ) {}
 
   @OnEvent('auth.registered')
-  async handleUserRegistered(payload: { email: string; verificationToken: string; userId: number; organizationId: number }) {
+  async handleUserRegistered(payload: {
+    email: string;
+    verificationToken: string;
+    userId: number;
+    organizationId: number;
+  }) {
     await this.notificationsHandler.send({
       type: 'email',
       to: payload.email,
@@ -24,12 +29,16 @@ export class AuthListener {
       entity: 'USER',
       userId: payload.userId,
       organizationId: payload.organizationId,
-      newValue: { email: payload.email }
+      newValue: { email: payload.email },
     });
   }
 
   @OnEvent('auth.forgot-password')
-  async handleForgotPassword(payload: { email: string; token: string; userId?: number }) {
+  async handleForgotPassword(payload: {
+    email: string;
+    token: string;
+    userId?: number;
+  }) {
     await this.notificationsHandler.send({
       type: 'email',
       to: payload.email,
@@ -41,12 +50,17 @@ export class AuthListener {
       action: 'FORGOT_PASSWORD',
       entity: 'USER',
       userId: payload.userId,
-      newValue: { email: payload.email }
+      newValue: { email: payload.email },
     });
   }
 
   @OnEvent('auth.verified')
-  async handleUserVerified(payload: { email: string; firstName: string; userId: number; organizationId: number }) {
+  async handleUserVerified(payload: {
+    email: string;
+    firstName: string;
+    userId: number;
+    organizationId: number;
+  }) {
     await this.notificationsHandler.send({
       type: 'email',
       to: payload.email,
@@ -58,12 +72,16 @@ export class AuthListener {
       action: 'VERIFY_EMAIL',
       entity: 'USER',
       userId: payload.userId,
-      organizationId: payload.organizationId
+      organizationId: payload.organizationId,
     });
   }
 
   @OnEvent('auth.resend-verification')
-  async handleResendVerification(payload: { email: string; verificationToken: string; userId: number }) {
+  async handleResendVerification(payload: {
+    email: string;
+    verificationToken: string;
+    userId: number;
+  }) {
     await this.notificationsHandler.send({
       type: 'email',
       to: payload.email,
@@ -74,7 +92,7 @@ export class AuthListener {
     await this.auditService.create({
       action: 'RESEND_VERIFICATION',
       entity: 'USER',
-      userId: payload.userId
+      userId: payload.userId,
     });
   }
 }

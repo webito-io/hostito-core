@@ -6,7 +6,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class NotificationTemplatesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createNotificationTemplateDto: CreateNotificationTemplateDto) {
     return await this.prisma.notificationTemplate.create({
@@ -34,11 +34,15 @@ export class NotificationTemplatesService {
     const template = await this.prisma.notificationTemplate.findUnique({
       where: { id },
     });
-    if (!template) throw new NotFoundException(`Notification Template #${id} not found`);
+    if (!template)
+      throw new NotFoundException(`Notification Template #${id} not found`);
     return template;
   }
 
-  async update(id: number, updateNotificationTemplateDto: UpdateNotificationTemplateDto) {
+  async update(
+    id: number,
+    updateNotificationTemplateDto: UpdateNotificationTemplateDto,
+  ) {
     await this.findOne(id);
     return await this.prisma.notificationTemplate.update({
       where: { id },

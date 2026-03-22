@@ -31,7 +31,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 @ApiTags('Currencies')
 @Controller('currencies')
 export class CurrenciesController {
-  constructor(private readonly currenciesService: CurrenciesService) { }
+  constructor(private readonly currenciesService: CurrenciesService) {}
 
   @UseGuards(AuthGuard, PermissionsGuard)
   @ApiBearerAuth()

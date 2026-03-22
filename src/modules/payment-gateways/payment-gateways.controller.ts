@@ -7,7 +7,12 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PaymentGatewaysService } from './payment-gateways.service';
 import { UpdatePaymentGatewayDto } from './dto/update-payment-gateway.dto';
 import { AuthGuard } from '../auth/auth.guard';
@@ -20,7 +25,7 @@ import { PaymentGatewayEntity } from './entities/payment-gateway.entity';
 export class PaymentGatewaysController {
   constructor(
     private readonly paymentGatewaysService: PaymentGatewaysService,
-  ) { }
+  ) {}
 
   @Get('public')
   @ApiOperation({ summary: 'Get all active payment gateways (public info)' })
@@ -79,6 +84,9 @@ export class PaymentGatewaysController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePaymentGatewayDto: UpdatePaymentGatewayDto,
   ) {
-    return await this.paymentGatewaysService.setConfig(id, updatePaymentGatewayDto);
+    return await this.paymentGatewaysService.setConfig(
+      id,
+      updatePaymentGatewayDto,
+    );
   }
 }

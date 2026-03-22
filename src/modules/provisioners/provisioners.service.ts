@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProvisionersService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(paginationDto: PaginationDto) {
     const { page = 1, limit = 10 } = paginationDto;

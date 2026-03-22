@@ -7,8 +7,7 @@ import { hasPermission } from 'src/common/decorators/permission.decorator';
 
 @Injectable()
 export class PaymentGatewaysService {
-
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   findAll({ pub }: { pub?: boolean }) {
     return this.prisma.paymentGateway.findMany({
@@ -96,7 +95,9 @@ export class PaymentGatewaysService {
     const skip = (page - 1) * limit;
 
     const where = {
-      ...(!hasPermission(user, 'payments', 'read', 'all') && { organizationId: user.organizationId }),
+      ...(!hasPermission(user, 'payments', 'read', 'all') && {
+        organizationId: user.organizationId,
+      }),
     };
 
     const [transactions, total] = await this.prisma.$transaction([
@@ -110,7 +111,7 @@ export class PaymentGatewaysService {
           invoice: { select: { id: true, total: true, status: true } },
           currency: { select: { id: true, code: true, symbol: true } },
           organization: { select: { id: true, name: true } },
-        }
+        },
       }),
       this.prisma.transaction.count({ where }),
     ]);
