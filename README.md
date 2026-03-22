@@ -95,17 +95,6 @@ hostito-core/
 └── test/                                # Jest E2E & Unit tests
 ```
 
----
-
-## Domain Management Architecture
-
-Hostito uses a double-layered approach for domain management:
-1. **Local DB**: Stores baseline data, relations, and billing info.
-2. **Live Sync**: When viewing a domain, Hostito fetches real-time data (nameservers, expiry, registrar status) from the provider (e.g., Spaceship, ResellerClub) and merges it on-the-fly.
-
-Management actions (NS changes, locking) are handled **asynchronously via BullMQ** to ensure a fast UI and reliable execution even if registrar APIs are slow.
-
----
 
 ## API Reference
 
