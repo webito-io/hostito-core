@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Provisioner, Server } from '@prisma/client';
+import * as crypto from 'crypto';
 import {
   ProvisionResult,
   ProvisionerProvider,
@@ -13,6 +14,32 @@ export type CpanelCredentials = {
 
 @Injectable()
 export class CpanelProvider implements ProvisionerProvider {
+  /**
+   * Generate a cryptographically secure random password string.
+   * Ensures at least one uppercase letter, one digit, and one special character.
+   */
+  private generateSecurePassword(length = 10): string {
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digits = '0123456789';
+    const specials = '!@#$%^&*()-_=+[]{};:,.<>?';
+    const allChars = upper.toLowerCase() + upper + digits;
+
+    // Generate main random part
+    const randomBytes = crypto.randomBytes(length);
+    let passwordCore = '';
+    for (let i = 0; i < length; i++) {
+      passwordCore += allChars[randomBytes[i] % allChars.length];
+    }
+
+    // Append required complexity characters
+    const byte = crypto.randomBytes(3);
+    const upperChar = upper[byte[0] % upper.length];
+    const digitChar = digits[byte[1] % digits.length];
+    const specialChar = specials[byte[2] % specials.length];
+
+    return passwordCore + upperChar + digitChar + specialChar;
+  }
+
   private async request<T = unknown>(
     server: Server,
     endpoint: string,
@@ -60,7 +87,7 @@ export class CpanelProvider implements ProvisionerProvider {
     }
 
     const password =
-      service.password || Math.random().toString(36).slice(-10) + 'A1!';
+      service.password || this.generateSecurePassword(10);
     const plan =
       (service.product?.config as Record<string, unknown>)?.cpanel_package ||
       'default';
