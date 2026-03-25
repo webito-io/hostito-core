@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { BillingCycle, ProductType } from '@prisma/client';
+import { CategoryEntity } from '../../categories/entities/category-response.entity';
 
 export class ProductEntity {
   @ApiProperty({ example: 1 })
@@ -19,6 +20,12 @@ export class ProductEntity {
 
   @ApiProperty({ example: 1 })
   currencyId: number;
+
+  @ApiProperty({ example: 1, required: false })
+  categoryId?: number;
+
+  @ApiProperty({ type: () => CategoryEntity, required: false })
+  category?: CategoryEntity;
 
   @ApiProperty({ enum: BillingCycle, example: BillingCycle.MONTHLY })
   cycle: BillingCycle;

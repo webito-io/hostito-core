@@ -29,6 +29,7 @@ import { UsersModule } from './modules/users/users.module';
 import { OutboxModule } from './modules/outbox/outbox.module';
 import { AutomationModule } from './modules/automation/automation.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
     }),
     ProvisionersModule,
     SettingsModule,
+    CategoriesModule,
     WalletsModule,
   ],
   controllers: [AppController],

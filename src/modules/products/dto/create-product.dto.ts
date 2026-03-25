@@ -27,6 +27,11 @@ export class CreateProductDto {
   @IsNumber()
   currencyId: number;
 
+  @ApiProperty({ description: 'ID of the category', required: false })
+  @IsOptional()
+  @IsNumber()
+  categoryId?: number;
+
   @ApiProperty({ enum: ProductType, description: 'Type of the product' })
   @IsEnum(ProductType)
   type: ProductType;

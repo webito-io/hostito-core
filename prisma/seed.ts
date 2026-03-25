@@ -39,7 +39,8 @@ async function main() {
     'notification-templates',
     'domains',
     'audit-logs',
-    'announcements'
+    'announcements',
+    'categories',
   ];
 
   for (const resource of resources) {
@@ -181,6 +182,7 @@ async function main() {
     { key: 'maintenance_mode', value: 'false', isPublic: true },
     { key: 'support_email', value: 'support@webito.io', isPublic: true },
     { key: 'notification_drivers', value: { email: 'smtp', sms: 'twilio' }, isPublic: false },
+    { key: 'admin_roles', value: [], isPublic: true }, // the roles have access to admin dashboard
   ];
 
   for (const setting of defaultSettings) {

@@ -248,6 +248,21 @@ model PaymentGateway {
   updatedAt    DateTime @updatedAt
 }
 
+model Category {
+  id          Int        @id @default(autoincrement())
+  name        String
+  slug        String     @unique
+  description String?
+  order       Int        @default(0)
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  parentId    Int?
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
 model Product {
   id          Int              @id @default(autoincrement())
   name        String
@@ -256,6 +271,8 @@ model Product {
   price       Float
   currency    Currency         @relation(fields: [currencyId], references: [id])
   currencyId  Int
+  category    Category?        @relation(fields: [categoryId], references: [id])
+  categoryId  Int?
   cycle       BillingCycle     @default(MONTHLY)
   isActive    Boolean          @default(true)
   module      String?

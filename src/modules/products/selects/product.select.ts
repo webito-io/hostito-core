@@ -17,4 +17,11 @@ export const productSelect = {
       symbol: true,
     },
   },
+  category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
 } satisfies Prisma.ProductSelect;
