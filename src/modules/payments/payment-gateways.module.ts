@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
-import { PaymentGatewaysService } from './payment-gateways.service';
 import { PaymentGatewaysController } from './payment-gateways.controller';
-import { PaymentsController } from './payments.controller';
 import { PaymentFactory } from './payment-gateways.factory';
-import { StripeProvider } from './providers/stripe/stripe.provider';
-import { PaypalProvider } from './providers/paypal/paypal.provider';
-import { CryptoProvider } from './providers/crypto/crypto.provider';
 import { PaymentGatewaysHandler } from './payment-gateways.handler';
+import { PaymentGatewaysService } from './payment-gateways.service';
+import { PaymentsController } from './payments.controller';
+import { CryptoProvider } from './providers/crypto/crypto.provider';
+import { PaypalProvider } from './providers/paypal/paypal.provider';
+import { StripeProvider } from './providers/stripe/stripe.provider';
+import { WalletProvider } from './providers/wallet/wallet.provider';
 
 @Module({
+  imports: [],
   controllers: [PaymentGatewaysController, PaymentsController],
   providers: [
     PaymentGatewaysService,
@@ -17,7 +19,8 @@ import { PaymentGatewaysHandler } from './payment-gateways.handler';
     StripeProvider,
     PaypalProvider,
     CryptoProvider,
+    WalletProvider,
   ],
   exports: [PaymentGatewaysHandler],
 })
-export class PaymentGatewaysModule {}
+export class PaymentGatewaysModule { }

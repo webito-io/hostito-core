@@ -35,13 +35,44 @@ export class PaymentGatewaysHandler {
     }
 
     const provider = this.paymentFactory.get(paymentGateway.name);
-
-    return await provider.initiate({
+    const result = await provider.initiate({
       gateway: paymentGateway,
       amount: createPaymentDto.amount,
       currency: currency.code,
       transactionId: createPaymentDto.transactionId,
     });
+
+    /* If the payment is already paid (e.g. via Wallet), complete it immediately */
+    if ((result as any).paid) {
+      const transaction = await this.prisma.transaction.findUnique({
+        where: { id: createPaymentDto.transactionId },
+      });
+
+      if (transaction) {
+        let paidInvoiceId: number | null = null;
+        await this.prisma.$transaction(async (tx) => {
+          await tx.transaction.update({
+            where: { id: transaction.id },
+            data: { status: 'COMPLETED' },
+          });
+
+          if (transaction.invoiceId) {
+            const invoice = await tx.invoice.update({
+              where: { id: transaction.invoiceId },
+              data: { status: 'PAID', paidAt: new Date() },
+            });
+            paidInvoiceId = invoice.id;
+            await this.process(tx, paidInvoiceId);
+          }
+        });
+
+        if (paidInvoiceId) {
+          this.eventEmitter.emit('invoice.paid', { invoiceId: paidInvoiceId });
+        }
+      }
+    }
+
+    return result;
   }
 
   async verify(transactionId: number, data) {
@@ -60,7 +91,7 @@ export class PaymentGatewaysHandler {
     }
 
     const provider = this.paymentFactory.get(gateway.name);
-    const verificationResult = await provider.verify(transaction, data);
+    const verificationResult = (await provider.verify(transaction, data)) as any;
     const isSuccess = verificationResult?.status === 'success';
 
     let paidInvoiceId: number | null = null;
@@ -99,7 +130,7 @@ export class PaymentGatewaysHandler {
       throw new Error('Payment gateway not found');
     }
 
-    const verify = await provider.webhook(gateway, headers, rawBody);
+    const verify = (await provider.webhook(gateway, headers, rawBody)) as any;
     const isSuccess = verify.transactionId && verify.status === 'success';
     if (!isSuccess) {
       return {

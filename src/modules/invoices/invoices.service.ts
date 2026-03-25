@@ -10,7 +10,7 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { invoiceSelect } from './selects/invoices.select';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { InvoiceStatus, User } from '@prisma/client';
-import { PaymentGatewaysHandler } from '../payment-gateways/payment-gateways.handler';
+import { PaymentGatewaysHandler } from '../payments/payment-gateways.handler';
 
 @Injectable()
 export class InvoicesService {
@@ -18,7 +18,7 @@ export class InvoicesService {
     private prisma: PrismaService,
     private emitter: EventEmitter2,
     private paymentGatewaysHandler: PaymentGatewaysHandler,
-  ) {}
+  ) { }
 
   /**
    * Creates a new invoice with associated items and a payment transaction.
@@ -219,13 +219,13 @@ export class InvoicesService {
           dueDate: updateInvoiceDto.dueDate,
           items: updateInvoiceDto.items
             ? {
-                create: updateInvoiceDto.items.map((item) => ({
-                  description: item.description,
-                  quantity: item.quantity,
-                  unitPrice: item.unitPrice,
-                  total: item.total,
-                })),
-              }
+              create: updateInvoiceDto.items.map((item) => ({
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.total,
+              })),
+            }
             : undefined,
         },
         select: invoiceSelect,

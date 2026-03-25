@@ -1,12 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PrismaService } from '../prisma/prisma.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { OutboxService } from '../outbox/outbox.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AutomationService {
-  private readonly logger = new Logger(AutomationService.name);
 
   constructor(
     private readonly prisma: PrismaService,
@@ -18,7 +17,7 @@ export class AutomationService {
    * Runs every day at midnight to process billing and provisioning automation
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handleDailyAutomations() {
+  async handler() {
     await this.renewals();
     await this.suspensions();
   }
@@ -30,6 +29,10 @@ export class AutomationService {
   async renewals() {
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + 7);
+
+    /* tax calculation */
+    const taxRates = await this.prisma.tax.findMany({ where: { isActive: true } });
+    const sumRate = taxRates.reduce((acc, t) => acc + t.rate, 0);
 
     const services = await this.prisma.service.findMany({
       where: {
@@ -52,39 +55,43 @@ export class AutomationService {
       },
     });
 
-    for (const service of services) {
+    const invoiceIds = await this.prisma.$transaction(async (tx) => {
+      const results: number[] = [];
+      for (const service of services) {
+        const subtotal = service.product.price;
+        const tax = parseFloat((subtotal * (sumRate / 100)).toFixed(2));
+        const total = subtotal + tax;
 
-      const taxRates = await this.prisma.tax.findMany({ where: { isActive: true } });
-      const sumRate = taxRates.reduce((acc, t) => acc + t.rate, 0);
-
-      const subtotal = service.product.price;
-      const tax = parseFloat((subtotal * (sumRate / 100)).toFixed(2));
-      const total = subtotal + tax;
-
-      const invoice = await this.prisma.invoice.create({
-        data: {
-          total,
-          tax,
-          subtotal,
-          discount: 0,
-          shipping: 0,
-          status: 'PENDING',
-          dueDate: service.nextDueDate,
-          organizationId: service.organizationId,
-          currencyId: service.organization.currencyId,
-          items: {
-            create: {
-              description: `Renewal - ${service.product.name}`,
-              quantity: 1,
-              unitPrice: service.product.price,
-              total: service.product.price,
-              serviceId: service.id,
+        const invoice = await tx.invoice.create({
+          data: {
+            total,
+            tax,
+            subtotal,
+            discount: 0,
+            shipping: 0,
+            status: 'PENDING',
+            dueDate: service.nextDueDate,
+            organizationId: service.organizationId,
+            currencyId: service.organization.currencyId,
+            items: {
+              create: {
+                description: `Renewal - ${service.product.name}`,
+                quantity: 1,
+                unitPrice: service.product.price,
+                total: service.product.price,
+                serviceId: service.id,
+              },
             },
           },
-        },
-      });
+        });
 
-      this.eventEmitter.emit('invoice.created', { invoiceId: invoice.id });
+        results.push(invoice.id);
+      }
+      return results;
+    });
+
+    for (const invoiceId of invoiceIds) {
+      this.eventEmitter.emit('invoice.created', { invoiceId });
     }
   }
 
@@ -110,27 +117,21 @@ export class AutomationService {
       }
     });
 
-    for (const service of overdueServices) {
-
-      await this.prisma.$transaction(async (tx) => {
-
-        await tx.service.update({
-          where: { id: service.id },
-          data: { status: 'SUSPENDED' },
-        });
-
-        await this.outboxService.create(tx, {
-          type: 'provisioner',
-          queue: 'provisioners',
-          jobName: 'execute-action',
-          payload: {
-            serviceId: service.id,
-            actionName: 'suspend',
-            extraArgs: { reason: 'OVERDUE' }
-          },
-        });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.service.updateMany({
+        where: { id: { in: overdueServices.map(s => s.id) } },
+        data: { status: 'SUSPENDED' },
       });
 
+      await this.outboxService.createMany(tx, overdueServices.map(s => ({
+        type: 'provisioner',
+        queue: 'provisioners',
+        jobName: 'execute-action',
+        payload: { serviceId: s.id, actionName: 'suspend', extraArgs: { reason: 'OVERDUE' } },
+      })));
+    });
+
+    for (const service of overdueServices) {
       // 3. Emit event for logging/notifications
       this.eventEmitter.emit('service.suspended', {
         serviceId: service.id,

@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CouponsCalculator } from '../coupons/coupons.calculator';
 import { CurrenciesCalculator } from '../currencies/currencies.calculator';
-import { PaymentGatewaysHandler } from '../payment-gateways/payment-gateways.handler';
+import { PaymentGatewaysHandler } from '../payments/payment-gateways.handler';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrdersService } from './orders.service';
 

@@ -16,7 +16,7 @@ import { NotificationTemplatesModule } from './modules/notification-templates/no
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
-import { PaymentGatewaysModule } from './modules/payment-gateways/payment-gateways.module';
+import { PaymentGatewaysModule } from './modules/payments/payment-gateways.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { ProductsModule } from './modules/products/products.module';
 import { ProvisionersModule } from './modules/provisioners/provisioners.module';
@@ -28,6 +28,7 @@ import { TaxesModule } from './modules/taxes/taxes.module';
 import { UsersModule } from './modules/users/users.module';
 import { OutboxModule } from './modules/outbox/outbox.module';
 import { AutomationModule } from './modules/automation/automation.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
 
 @Module({
   imports: [
@@ -62,8 +63,9 @@ import { AutomationModule } from './modules/automation/automation.module';
     }),
     ProvisionersModule,
     SettingsModule,
+    WalletsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
