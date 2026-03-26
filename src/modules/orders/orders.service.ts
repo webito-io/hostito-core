@@ -382,12 +382,7 @@ export class OrdersService {
       }),
     ]);
 
-    return {
-      orders,
-      total,
-      page,
-      limit,
-    };
+    return { data: orders, total, page, limit };
   }
 
   /**

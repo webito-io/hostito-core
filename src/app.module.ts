@@ -30,6 +30,7 @@ import { OutboxModule } from './modules/outbox/outbox.module';
 import { AutomationModule } from './modules/automation/automation.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { RegistrarsModule } from './modules/registrars/registrars.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
     SettingsModule,
     CategoriesModule,
     WalletsModule,
+    RegistrarsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -2,8 +2,6 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcrypt';
-import * as fs from 'fs';
-import * as path from 'path';
 
 dotenv.config();
 
@@ -33,7 +31,7 @@ async function main() {
     'orders',
     'invoices',
     'servers',
-    'payments',
+    'services',
     'notifications',
     'settings',
     'notification-templates',
@@ -41,6 +39,9 @@ async function main() {
     'audit-logs',
     'announcements',
     'categories',
+    'provisioners',
+    'payments',
+    'carts',
   ];
 
   for (const resource of resources) {
@@ -69,7 +70,7 @@ async function main() {
     where: { scope: 'own' },
   });
 
-  await prisma.role.upsert({
+  const superadmin = await prisma.role.upsert({
     where: { name: 'SuperAdmin' },
     update: {},
     create: {
@@ -78,7 +79,7 @@ async function main() {
     },
   });
 
-  await prisma.role.upsert({
+  const userrole = await prisma.role.upsert({
     where: { name: 'User' },
     update: {},
     create: {
@@ -202,13 +203,112 @@ async function main() {
     });
   }
 
-  // --- 9. Settings ---
+  // --- 9. Provisioners ---
+  const provisioners = [
+    {
+      name: 'cpanel',
+      config: {
+        apiVersion: '1',
+        port: 2087,
+        protocol: 'https',
+        endpoint: '/json-api/',
+        authHeader: 'whm',
+        description: 'cPanel/WHM hosting control panel provisioner',
+      },
+    },
+    {
+      name: 'directadmin',
+      config: {
+        port: 2222,
+        protocol: 'https',
+        endpoint: '/api/',
+        description: 'DirectAdmin hosting control panel provisioner',
+      },
+    },
+  ];
+
+  for (const provisioner of provisioners) {
+    await prisma.provisioner.upsert({
+      where: { name: provisioner.name },
+      update: {},
+      create: {
+        name: provisioner.name,
+        isActive: true,
+        config: provisioner.config,
+      },
+    });
+  }
+
+  // --- 10. Registrars ---
+  const registrars = [
+    {
+      name: 'spaceship',
+      config: {
+        baseUrl: 'https://spaceship.dev/api/v1',
+        apiKey: '',
+        apiSecret: '',
+      },
+    },
+  ];
+
+  for (const registrar of registrars) {
+    await prisma.registrar.upsert({
+      where: { name: registrar.name },
+      update: {},
+      create: {
+        name: registrar.name,
+        isActive: false,
+        config: registrar.config,
+      },
+    });
+  }
+
+  // --- 11. Notification Templates ---
+  const notificationTemplates = [
+    {
+      name: 'verify_email',
+      subject: 'Verify your email address',
+      body: `<p>Hi,</p>
+<p>Thank you for registering. Please use the verification code below to confirm your email address:</p>
+<h2 style="letter-spacing: 4px;">{{data.verificationToken}}</h2>
+<p>This code is valid for a limited time. If you did not create an account, you can safely ignore this email.</p>
+<p>Thanks,<br/>The ${process.env.Brand} Team</p>`,
+    },
+    {
+      name: 'reset_password',
+      subject: 'Reset your password',
+      body: `<p>Hi,</p>
+<p>We received a request to reset your password. Click the link below to set a new password:</p>
+<p><a href="{{data.token}}">Reset Password</a></p>
+<p>This link will expire in 1 hour. If you did not request a password reset, you can safely ignore this email.</p>
+<p>Thanks,<br/>The ${process.env.Brand} Team</p>`,
+    },
+    {
+      name: 'welcome',
+      subject: `Welcome to ${process.env.Brand}`,
+      body: `<p>Hi {{data.firstName}},</p>
+<p>Your email has been verified and your account is now active. Welcome aboard!</p>
+<p>You can now log in and start managing your services.</p>
+<p>Thanks,<br/>The ${process.env.Brand} Team</p>`,
+    },
+  ];
+
+  for (const template of notificationTemplates) {
+    await prisma.notificationTemplate.upsert({
+      where: { name: template.name },
+      update: {},
+      create: template,
+    });
+  }
+
+  // --- 12. Settings ---
   const defaultSettings: any[] = [
-    { key: 'site_name', value: 'Hostito', isPublic: true },
+    { key: 'site_name', value: process.env.Brand, isPublic: true },
     { key: 'maintenance_mode', value: 'false', isPublic: true },
     { key: 'support_email', value: 'support@webito.io', isPublic: true },
     { key: 'notification_drivers', value: { email: 'smtp', sms: 'twilio' }, isPublic: false },
-    { key: 'admin_roles', value: [], isPublic: true }, // the roles have access to admin dashboard
+    { key: 'admin_roles', value: [superadmin.id], isPublic: true }, // the roles have access to admin dashboard
+    { key: 'default_role', value: userrole.id, isPublic: false }, // default_role
   ];
 
   for (const setting of defaultSettings) {

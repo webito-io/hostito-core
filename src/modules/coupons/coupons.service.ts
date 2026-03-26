@@ -38,7 +38,7 @@ export class CouponsService {
       this.prisma.coupon.count(),
     ]);
 
-    return { data: coupons, total };
+    return { data: coupons, total, page: pageNumber, limit: pageSize };
   }
 
   async findOne(id: number) {

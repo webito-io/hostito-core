@@ -1,4 +1,4 @@
-import { Domain, Organization, User } from '@prisma/client';
+import { Domain, Organization, Registrar, User } from '@prisma/client';
 
 export interface DomainProvisionResult {
   status: 'success' | 'failed';
@@ -8,6 +8,7 @@ export interface DomainProvisionResult {
 
 export interface DomainProvisioningArgs {
   domain: Domain;
+  registrar: Registrar;
   organization?: Organization;
   user?: User;
   [key: string]: any;
@@ -22,7 +23,7 @@ export interface DomainProvider {
   nameservers(args: DomainProvisioningArgs): Promise<DomainProvisionResult>;
   privacy(args: DomainProvisioningArgs): Promise<DomainProvisionResult>;
   transfer(args: DomainProvisioningArgs): Promise<DomainProvisionResult>;
-  availability(domainName: string): Promise<boolean>;
+  availability(domainName: string, registrar: Registrar): Promise<boolean>;
 }
 
 export enum DomainProviderType {

@@ -6,7 +6,7 @@ import {
 } from './providers/domains.provider.interface';
 
 @Injectable()
-export class DomainsFactory {
+export class RegistrarsFactory {
   constructor(private readonly spaceship: SpaceshipProvider) {}
 
   get(type: DomainProviderType): DomainProvider {
@@ -14,7 +14,7 @@ export class DomainsFactory {
       case DomainProviderType.SPACESHIP:
         return this.spaceship;
       default:
-        throw new BadRequestException(`Domain provider ${type} not supported`);
+        throw new BadRequestException(`Domain registrar ${type} not supported`);
     }
   }
 }

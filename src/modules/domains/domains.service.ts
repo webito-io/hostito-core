@@ -4,24 +4,26 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateDomainDto } from './dto/update-domain.dto';
 import { CheckDomainDto } from './dto/check-domain.dto';
-
-import { DomainsFactory } from './domains.factory';
-import { DomainsHandler } from './domains.handler';
-import { DomainProviderType } from './providers/domains.provider.interface';
+import { RegistrarsFactory } from '../registrars/registrars.factory';
+import { RegistrarsHandler } from '../registrars/registrars.handler';
+import { DomainProviderType } from '../registrars/providers/domains.provider.interface';
 
 @Injectable()
 export class DomainsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly domainsFactory: DomainsFactory,
-    private readonly domainsHandler: DomainsHandler,
+    private readonly registrarsFactory: RegistrarsFactory,
+    private readonly registrarsHandler: RegistrarsHandler,
   ) {}
 
   async check(domainName: string): Promise<CheckDomainDto> {
-    const provider = this.domainsFactory.get(DomainProviderType.SPACESHIP);
-    if (!provider.availability)
-      throw new Error('Provider does not support domain availability');
-    const available = await provider.availability(domainName);
+    const registrar = await this.prisma.registrar.findFirst({
+      where: { isActive: true },
+    });
+    if (!registrar) throw new NotFoundException('No active registrar found');
+
+    const provider = this.registrarsFactory.get(registrar.name as DomainProviderType);
+    const available = await provider.availability(domainName, registrar);
     return { domain: domainName, available };
   }
 
@@ -42,9 +44,8 @@ export class DomainsService {
         orderBy: { createdAt: 'desc' },
         where,
         include: {
-          organization: {
-            select: { id: true, name: true },
-          },
+          organization: { select: { id: true, name: true } },
+          registrar: { select: { id: true, name: true } },
         },
       }),
       this.prisma.domain.count({ where }),
@@ -64,43 +65,37 @@ export class DomainsService {
     const domain = await this.prisma.domain.findFirst({
       where,
       include: {
-        organization: {
-          select: { id: true, name: true },
-        },
+        organization: { select: { id: true, name: true } },
+        registrar: { select: { id: true, name: true } },
       },
     });
 
-    if (!domain) {
-      throw new NotFoundException(`Domain #${id} not found`);
-    }
-
+    if (!domain) throw new NotFoundException(`Domain #${id} not found`);
     return domain;
   }
 
   async update(id: number, updateDomainDto: UpdateDomainDto, user) {
-    const domain = await this.findOne(id, user);
+    await this.findOne(id, user);
 
-    // 1. Sync with Registrar (Async via Queue)
     if (updateDomainDto.nameservers) {
-      await this.domainsHandler.executeAction(id, 'nameservers', {
+      await this.registrarsHandler.executeAction(id, 'nameservers', {
         nameservers: updateDomainDto.nameservers,
       });
     }
 
     if (updateDomainDto.isLocked !== undefined) {
-      await this.domainsHandler.executeAction(
+      await this.registrarsHandler.executeAction(
         id,
         updateDomainDto.isLocked ? 'lock' : 'unlock',
       );
     }
 
     if (updateDomainDto.privacy !== undefined) {
-      await this.domainsHandler.executeAction(id, 'privacy', {
+      await this.registrarsHandler.executeAction(id, 'privacy', {
         enabled: updateDomainDto.privacy,
       });
     }
 
-    // 2. Update Local DB
     return await this.prisma.domain.update({
       where: { id },
       data: updateDomainDto,
@@ -109,8 +104,6 @@ export class DomainsService {
 
   async remove(id: number, user) {
     await this.findOne(id, user);
-    return await this.prisma.domain.delete({
-      where: { id },
-    });
+    return await this.prisma.domain.delete({ where: { id } });
   }
 }

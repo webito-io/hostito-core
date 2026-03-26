@@ -306,7 +306,8 @@ model Domain {
   id             Int          @id @default(autoincrement())
   name           String       @unique
   status         DomainStatus @default(PENDING)
-  registrar      String?      // resellerclub, enom
+  registrar      Registrar?   @relation(fields: [registrarId], references: [id])
+  registrarId    Int?
   expiresAt      DateTime?
   autoRenew      Boolean      @default(true)
   nameservers    String[]     @default([])
@@ -319,6 +320,16 @@ model Domain {
   invoiceItems   InvoiceItem[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+}
+
+model Registrar {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique // spaceship, dynadot
+  isActive  Boolean  @default(false)
+  config    Json?    // api keys, secrets
+  domains   Domain[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum DomainStatus {

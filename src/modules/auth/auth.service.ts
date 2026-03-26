@@ -42,6 +42,15 @@ export class AuthService {
       100000 + Math.random() * 900000,
     ).toString();
 
+    /* Resolve default role from settings */
+    const defaultRoleSetting = await this.prisma.setting.findUnique({
+      where: { key: 'default_role' },
+    });
+    if (!defaultRoleSetting) {
+      throw new NotFoundException('Default role setting not found');
+    }
+    const defaultRoleId = defaultRoleSetting.value as number;
+
     /* Create organization */
     const organization = await this.prisma.organization.create({
       data: {
@@ -57,7 +66,7 @@ export class AuthService {
         password: hashed,
         firstName,
         lastName,
-        role: { connect: { name: 'User' } },
+        role: { connect: { id: defaultRoleId } },
         organization: { connect: { id: organization.id } },
         verificationToken,
       },

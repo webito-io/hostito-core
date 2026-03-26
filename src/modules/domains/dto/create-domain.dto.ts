@@ -22,10 +22,10 @@ export class CreateDomainDto {
   @IsOptional()
   status?: any; // Avoiding direct prisma enum import
 
-  @ApiPropertyOptional({ example: 'resellerclub' })
-  @IsString()
+  @ApiPropertyOptional({ example: 1, description: 'Registrar ID' })
+  @IsInt()
   @IsOptional()
-  registrar?: string;
+  registrarId?: number;
 
   @ApiPropertyOptional()
   @IsDateString()

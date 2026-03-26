@@ -1,3 +1,4 @@
+import { BadGatewayException } from '@nestjs/common';
 import { PaymentGateway, Transaction } from '@prisma/client';
 import Stripe from 'stripe';
 
@@ -26,34 +27,40 @@ export class StripeProvider {
       apiVersion: '2026-02-25.clover',
     });
 
-    const session = await stripeClient.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: currency.toLowerCase(),
-            product_data: {
-              name: `Invoice Payment #${transactionId}`,
+    try {
+      const session = await stripeClient.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: currency.toLowerCase(),
+              product_data: {
+                name: `Invoice Payment #${transactionId}`,
+              },
+              unit_amount: Math.round(amount * 100),
             },
-            unit_amount: Math.round(amount * 100),
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        mode: 'payment',
+        success_url: config.successUrl,
+        cancel_url: config.cancelUrl,
+        client_reference_id: transactionId.toString(),
+        metadata: {
+          transactionId: transactionId.toString(),
         },
-      ],
-      mode: 'payment',
-      success_url: config.successUrl,
-      cancel_url: config.cancelUrl,
-      client_reference_id: transactionId.toString(),
-      metadata: {
-        transactionId: transactionId.toString(),
-      },
-    });
+      });
 
-    return {
-      status: session.status === 'open',
-      url: session.url,
-      sessionId: session.id,
-    };
+      return {
+        status: session.status === 'open',
+        url: session.url,
+        sessionId: session.id,
+      };
+    } catch (err: any) {
+      throw new BadGatewayException(
+        `Payment gateway error: ${err.message || 'Stripe request failed'}`,
+      );
+    }
   }
 
   async verify(transaction: Transaction, data) {}

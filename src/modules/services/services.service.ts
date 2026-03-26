@@ -27,14 +27,7 @@ export class ServicesService {
       this.prisma.service.count(),
     ]);
 
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        lastPage: Math.ceil(total / limit),
-      },
-    };
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {
