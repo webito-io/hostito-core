@@ -21,8 +21,15 @@ export class ProductsService {
    */
 
   async create(createProductDto: CreateProductDto) {
+    const { variants, ...productData } = createProductDto;
+
     return await this.prisma.product.create({
-      data: createProductDto,
+      data: {
+        ...productData,
+        variants: {
+          create: variants,
+        },
+      },
       select: productSelect,
     });
   }
@@ -40,7 +47,9 @@ export class ProductsService {
 
     const canView =
       currentUser && hasPermission(currentUser, 'products', 'read', 'all');
-    const where = canView ? {} : { isActive: true };
+    const where = canView
+      ? {}
+      : { isActive: true, type: { not: 'DOMAIN' as const } };
 
     const [data, total] = await Promise.all([
       this.prisma.product.findMany({
@@ -95,10 +104,21 @@ export class ProductsService {
       );
     }
 
-    return await this.prisma.product.update({
-      where: { id },
-      data: updateProductDto,
-      select: productSelect,
+    const { variants, ...productData } = updateProductDto;
+
+    return await this.prisma.$transaction(async (tx) => {
+      if (variants) {
+        await tx.productVariant.deleteMany({ where: { productId: id } });
+        await tx.productVariant.createMany({
+          data: variants.map((v) => ({ ...v, productId: id })),
+        });
+      }
+
+      return tx.product.update({
+        where: { id },
+        data: productData,
+        select: productSelect,
+      });
     });
   }
 

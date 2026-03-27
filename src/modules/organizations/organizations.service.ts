@@ -65,12 +65,11 @@ export class OrganizationsService {
   }
 
   async update(id: number, updateOrganizationDto: UpdateOrganizationDto) {
-    const { name, currencyId, users } = updateOrganizationDto;
+    const { users, ...data } = updateOrganizationDto;
     const updatedOrg = await this.prisma.organization.update({
       where: { id },
       data: {
-        name,
-        currencyId,
+        ...data,
         ...(users
           ? {
               users: { connect: users.map((userId) => ({ id: userId })) },

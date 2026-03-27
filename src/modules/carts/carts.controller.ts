@@ -21,6 +21,7 @@ import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { AuthGuard } from '../auth/auth.guard';
 import { CartsService } from './carts.service';
 import { CartItemDto } from './dto/cart-item.dto';
+import { AddDomainDto } from './dto/add-domain.dto';
 import { CartEntity, CartItemEntity } from './entities/cart.entity';
 import { ApplyCouponDto } from './dto/apply-coupon.dto';
 
@@ -40,6 +41,19 @@ export class CartsController {
   })
   async create(@Body() createCartDto: CartItemDto, @Req() req) {
     return await this.cartsService.add(createCartDto, req.user);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('/domain')
+  @ApiOperation({ summary: 'Add domain to cart (resolves TLD pricing automatically)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Domain added to cart',
+    type: CartItemEntity,
+  })
+  async addDomain(@Body() body: AddDomainDto, @Req() req) {
+    return await this.cartsService.addDomain(body.domain, req.user);
   }
 
   @UseGuards(AuthGuard)

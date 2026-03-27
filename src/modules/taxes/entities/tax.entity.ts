@@ -10,6 +10,9 @@ export class TaxEntity {
   @ApiProperty({ example: 15.0 })
   rate: number;
 
+  @ApiProperty({ example: 'US', required: false })
+  country?: string;
+
   @ApiProperty({ example: true })
   isActive: boolean;
 

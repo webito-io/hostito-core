@@ -7,8 +7,23 @@ export class OrganizationEntity {
   @ApiProperty({ example: 'My Business LLC' })
   name: string;
 
-  @ApiProperty({ example: 'https://example.com/logo.png', required: false })
-  logo?: string;
+  @ApiProperty({ example: '+1234567890', required: false })
+  phone?: string;
+
+  @ApiProperty({ example: '123 Main St', required: false })
+  address?: string;
+
+  @ApiProperty({ example: 'New York', required: false })
+  city?: string;
+
+  @ApiProperty({ example: 'NY', required: false })
+  state?: string;
+
+  @ApiProperty({ example: '10001', required: false })
+  zip?: string;
+
+  @ApiProperty({ example: 'US', required: false })
+  country?: string;
 
   @ApiProperty({ example: 1 })
   currencyId: number;

@@ -6,7 +6,7 @@ export const productSelect = {
   description: true,
   type: true,
   isActive: true,
-  module: true,
+  tld: true,
   config: true,
   variants: {
     select: {
@@ -29,6 +29,18 @@ export const productSelect = {
       id: true,
       name: true,
       slug: true,
+    },
+  },
+  server: {
+    select: {
+      id: true,
+      name: true,
+      provisioner: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   },
 } satisfies Prisma.ProductSelect;

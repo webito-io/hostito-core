@@ -62,6 +62,12 @@ enum Status {
 model Organization {
   id        Int       @id @default(autoincrement())
   name      String
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  zip       String?
+  country   String?   // ISO 3166-1 alpha-2 (US, DE, IR, ...)
   users     User[]
   invoices  Invoice[]
   orders    Order[]
@@ -136,6 +142,7 @@ model Cart {
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId Int        @unique
   status         CartStatus @default(ACTIVE)
+  couponCode     String?
   items          CartItem[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
@@ -276,8 +283,10 @@ model Product {
   currencyId  Int
   category    Category?        @relation(fields: [categoryId], references: [id])
   categoryId  Int?
+  server      Server?          @relation(fields: [serverId], references: [id])
+  serverId    Int?
+  tld         String?          @unique // .com, .net, .ir — only for DOMAIN products
   isActive    Boolean          @default(true)
-  module      String?
   config      Json?
   variants    ProductVariant[]
   services    Service[]
@@ -288,11 +297,8 @@ model Product {
 }
 
 enum ProductType {
-  HOSTING
-  VPS
+  SERVICE
   DOMAIN
-  LICENSE
-  OTHER
 }
 
 enum BillingCycle {
@@ -416,6 +422,7 @@ model Server {
   maxAccounts   Int?
   provisioner   Provisioner @relation(fields: [provisionerId], references: [id])
   provisionerId Int
+  products      Product[]
   services      Service[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

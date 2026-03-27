@@ -12,7 +12,37 @@ export class CreateOrganizationDto {
   @Type(() => Number)
   currencyId: number;
 
-  @ApiProperty({ description: 'Users id to update', type: [Number] })
+  @ApiProperty({ description: 'Phone number', required: false })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiProperty({ description: 'Street address', required: false })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiProperty({ description: 'City', required: false })
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @ApiProperty({ description: 'State / Province', required: false })
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @ApiProperty({ description: 'Postal / ZIP code', required: false })
+  @IsOptional()
+  @IsString()
+  zip?: string;
+
+  @ApiProperty({ description: 'Country code (ISO 3166-1 alpha-2)', example: 'US', required: false })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiProperty({ description: 'Users id to connect', type: [Number], required: false })
   @IsOptional()
   @IsArray()
   @Type(() => Number)

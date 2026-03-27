@@ -8,6 +8,7 @@ import { InvoiceStatus, User } from '@prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { CouponsCalculator } from '../coupons/coupons.calculator';
 import { CurrenciesCalculator } from '../currencies/currencies.calculator';
+import { TaxesCalculator } from '../taxes/taxes.calculator';
 import { PaymentGatewaysHandler } from '../payments/payment-gateways.handler';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -22,6 +23,7 @@ export class OrdersService {
     private readonly eventEmitter: EventEmitter2,
     private readonly paymentGatewaysHandler: PaymentGatewaysHandler,
     private readonly currencyConverter: CurrenciesCalculator,
+    private readonly taxesCalculator: TaxesCalculator,
   ) { }
 
   /**
@@ -124,10 +126,11 @@ export class OrdersService {
       }
 
       /* Apply coupon */
-      const coupon = createOrderDto.coupon
+      const couponCode = createOrderDto.coupon || cart.couponCode;
+      const coupon = couponCode
         ? await prisma.coupon.findUnique({
           where: {
-            code: createOrderDto.coupon,
+            code: couponCode,
           },
         })
         : null;
@@ -150,13 +153,8 @@ export class OrdersService {
       }
 
       /* Apply tax */
-      const taxRates = await prisma.tax.findMany({
-        where: {
-          isActive: true,
-        },
-      });
-      const sumRate = taxRates.reduce((acc, t) => acc + t.rate, 0);
-      tax = total * (sumRate / 100);
+      const taxRate = await this.taxesCalculator.getRate(organization.country);
+      tax = parseFloat((total * (taxRate / 100)).toFixed(2));
       total += tax;
 
       /* Order Creation */
@@ -216,6 +214,7 @@ export class OrdersService {
         },
         data: {
           status: 'ACTIVE',
+          couponCode: null,
         },
       });
 

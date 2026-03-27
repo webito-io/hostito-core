@@ -318,6 +318,198 @@ async function main() {
       create: setting,
     });
   }
+
+  // --- 13. Sample Taxes ---
+  await prisma.tax.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      name: 'VAT',
+      rate: 10,
+      isActive: true,
+    },
+  });
+
+  await prisma.tax.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      name: 'EU VAT',
+      rate: 20,
+      country: 'DE',
+      isActive: true,
+    },
+  });
+
+  // --- 14. Sample Category ---
+  const hostingCategory = await prisma.category.upsert({
+    where: { slug: 'shared-hosting' },
+    update: {},
+    create: {
+      name: 'Shared Hosting',
+      slug: 'shared-hosting',
+      description: 'Shared web hosting plans',
+    },
+  });
+
+  // --- 14. Sample Server ---
+  const cpanelProvisioner = await prisma.provisioner.findUnique({
+    where: { name: 'cpanel' },
+  });
+
+  let sampleServer: any = null;
+  if (cpanelProvisioner) {
+    sampleServer = await prisma.server.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        name: 'Web Server 1',
+        hostname: 'srv1.example.com',
+        ip: '192.168.1.1',
+        port: 2087,
+        credentials: {
+          username: 'root',
+          apiToken: 'your-whm-api-token-here',
+        },
+        isActive: true,
+        maxAccounts: 200,
+        provisionerId: cpanelProvisioner.id,
+      },
+    });
+  }
+
+  // --- 15. Sample Products ---
+  const starterHosting = await prisma.product.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      name: 'Starter Hosting',
+      description: 'Perfect for small websites and blogs',
+      type: 'SERVICE',
+      currencyId: currency.id,
+      categoryId: hostingCategory.id,
+      serverId: sampleServer?.id ?? null,
+      config: { package: 'starter', maxEmails: 5 },
+      isActive: true,
+      variants: {
+        create: [
+          { action: 'RECURRING', cycle: 'MONTHLY', price: 4.99 },
+          { action: 'RECURRING', cycle: 'ANNUAL', price: 49.99 },
+          { action: 'SETUP', cycle: 'ONETIME', price: 2.99 },
+        ],
+      },
+    },
+  });
+
+  const proHosting = await prisma.product.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      name: 'Pro Hosting',
+      description: 'For growing businesses and high-traffic sites',
+      type: 'SERVICE',
+      currencyId: currency.id,
+      categoryId: hostingCategory.id,
+      serverId: sampleServer?.id ?? null,
+      config: { package: 'pro', maxEmails: 50 },
+      isActive: true,
+      variants: {
+        create: [
+          { action: 'RECURRING', cycle: 'MONTHLY', price: 12.99 },
+          { action: 'RECURRING', cycle: 'ANNUAL', price: 129.99 },
+          { action: 'SETUP', cycle: 'ONETIME', price: 0 },
+        ],
+      },
+    },
+  });
+
+  // --- 16. Sample Domain Products ---
+  const comDomain = await prisma.product.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      name: '.com Domain',
+      type: 'DOMAIN',
+      tld: '.com',
+      currencyId: currency.id,
+      isActive: true,
+      variants: {
+        create: [
+          { action: 'REGISTER', cycle: 'ANNUAL', price: 11.99 },
+          { action: 'RENEW', cycle: 'ANNUAL', price: 13.99 },
+          { action: 'TRANSFER', cycle: 'ONETIME', price: 11.99 },
+        ],
+      },
+    },
+  });
+
+  const netDomain = await prisma.product.upsert({
+    where: { id: 4 },
+    update: {},
+    create: {
+      name: '.net Domain',
+      type: 'DOMAIN',
+      tld: '.net',
+      currencyId: currency.id,
+      isActive: true,
+      variants: {
+        create: [
+          { action: 'REGISTER', cycle: 'ANNUAL', price: 13.99 },
+          { action: 'RENEW', cycle: 'ANNUAL', price: 15.99 },
+          { action: 'TRANSFER', cycle: 'ONETIME', price: 13.99 },
+        ],
+      },
+    },
+  });
+
+  const orgDomain = await prisma.product.upsert({
+    where: { id: 5 },
+    update: {},
+    create: {
+      name: '.org Domain',
+      type: 'DOMAIN',
+      tld: '.org',
+      currencyId: currency.id,
+      isActive: true,
+      variants: {
+        create: [
+          { action: 'REGISTER', cycle: 'ANNUAL', price: 9.99 },
+          { action: 'RENEW', cycle: 'ANNUAL', price: 12.99 },
+          { action: 'TRANSFER', cycle: 'ONETIME', price: 9.99 },
+        ],
+      },
+    },
+  });
+
+  // --- 17. Sample Coupons ---
+  await prisma.coupon.upsert({
+    where: { code: 'WELCOME20' },
+    update: {},
+    create: {
+      code: 'WELCOME20',
+      type: 'PERCENTAGE',
+      value: 20,
+      maxUses: 100,
+      isActive: true,
+      expiresAt: new Date('2027-12-31'),
+    },
+  });
+
+  await prisma.coupon.upsert({
+    where: { code: 'FLAT5' },
+    update: {},
+    create: {
+      code: 'FLAT5',
+      type: 'FIXED',
+      value: 5,
+      currencyId: currency.id,
+      maxUses: 50,
+      isActive: true,
+      expiresAt: new Date('2027-12-31'),
+    },
+  });
+
+  console.log('Seed completed successfully.');
 }
 
 main()

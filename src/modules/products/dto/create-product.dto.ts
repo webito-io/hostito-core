@@ -1,16 +1,33 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsBoolean,
   IsEnum,
   IsNumber,
   IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
-import { ProductType } from '@prisma/client';
+import { BillingCycle, ProductType, VariantAction } from '@prisma/client';
+import { Type } from 'class-transformer';
+
+export class CreateVariantDto {
+  @ApiProperty({ enum: VariantAction, description: 'Variant action type', example: 'RECURRING' })
+  @IsEnum(VariantAction)
+  action: VariantAction;
+
+  @ApiProperty({ enum: BillingCycle, description: 'Billing cycle', example: 'MONTHLY' })
+  @IsEnum(BillingCycle)
+  cycle: BillingCycle;
+
+  @ApiProperty({ description: 'Price for this variant', example: 9.99 })
+  @IsNumber()
+  price: number;
+}
 
 export class CreateProductDto {
-  @ApiProperty({ description: 'Name of the product' })
+  @ApiProperty({ description: 'Name of the product', example: 'Shared Hosting' })
   @IsString()
   name: string;
 
@@ -19,7 +36,7 @@ export class CreateProductDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'ID of the currency' })
+  @ApiProperty({ description: 'ID of the currency', example: 1 })
   @IsNumber()
   currencyId: number;
 
@@ -28,7 +45,7 @@ export class CreateProductDto {
   @IsNumber()
   categoryId?: number;
 
-  @ApiProperty({ enum: ProductType, description: 'Type of the product' })
+  @ApiProperty({ enum: ProductType, description: 'Type of the product', example: 'SERVICE' })
   @IsEnum(ProductType)
   type: ProductType;
 
@@ -37,16 +54,31 @@ export class CreateProductDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiProperty({
-    description: 'Module of the product (cpanel, directadmin, vps)',
-    required: false,
-  })
+  @ApiProperty({ description: 'ID of the server (for provisioning)', required: false, example: 1 })
+  @IsOptional()
+  @IsNumber()
+  serverId?: number;
+
+  @ApiProperty({ description: 'TLD for domain products (e.g. .com, .net)', required: false, example: '.com' })
   @IsOptional()
   @IsString()
-  module?: string;
+  tld?: string;
 
-  @ApiProperty({ description: 'Module config', required: false })
+  @ApiProperty({ description: 'Provisioning config (e.g. cpanel package, ram, disk)', required: false })
   @IsOptional()
   @IsObject()
   config?: object;
+
+  @ApiProperty({
+    description: 'Product pricing variants',
+    type: [CreateVariantDto],
+    example: [
+      { action: 'RECURRING', cycle: 'MONTHLY', price: 9.99 },
+      { action: 'RECURRING', cycle: 'ANNUAL', price: 99.99 },
+    ],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateVariantDto)
+  variants: CreateVariantDto[];
 }

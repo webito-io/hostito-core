@@ -11,6 +11,15 @@ export class CreateTaxDto {
   rate: number;
 
   @ApiProperty({
+    description: 'Country code (ISO 3166-1 alpha-2). Leave empty for global tax.',
+    example: 'US',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiProperty({
     description: 'Is the tax active',
     example: true,
     required: false,
