@@ -18,8 +18,8 @@ export class WalletsController {
   @RequirePermission('payments', 'create', 'own')
   @ApiOperation({ summary: 'Deposit to wallet' })
   @ApiCreatedResponse({ type: WalletDepositResponse })
-  deposit(@Body() depositWalletDto: DepositWalletDto) {
-    return this.walletsService.deposit(depositWalletDto);
+  deposit(@Body() depositWalletDto: DepositWalletDto , @Req() req) {
+    return this.walletsService.deposit(depositWalletDto , req.user);
   }
 
   @Get('/balance')

@@ -4,6 +4,7 @@ import { CurrenciesCalculator } from '../currencies/currencies.calculator';
 import { PaymentGatewaysHandler } from '../payments/payment-gateways.handler';
 import { PrismaService } from '../prisma/prisma.service';
 import { DepositWalletDto } from './dto/deposit.wallets.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class WalletsService {
@@ -59,16 +60,23 @@ export class WalletsService {
     return { balance, currencyId: currencyToUse };
   }
 
-  async deposit(depositWalletDto: DepositWalletDto) {
+  async deposit(depositWalletDto: DepositWalletDto, user: User) {
     const paymentGatewaysHandler = this.moduleRef.get(PaymentGatewaysHandler, { strict: false });
+
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: user.organizationId },
+    });
+    if (!organization) {
+      throw new BadRequestException('Organization not found');
+    }
 
     const transaction = await this.prisma.transaction.create({
       data: {
         amount: depositWalletDto.amount,
         type: 'CREDIT',
         status: 'PENDING',
-        organizationId: depositWalletDto.organizationId!,
-        currencyId: depositWalletDto.currencyId,
+        organizationId: organization.id,
+        currencyId: organization.currencyId,
         gatewayId: depositWalletDto.gatewayId,
         gatewayRef: depositWalletDto.gatewayRef,
       },

@@ -154,7 +154,7 @@ export class AuthService {
           select: { id: true, name: true },
         },
         organization: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, currency: true },
         },
       },
     });
