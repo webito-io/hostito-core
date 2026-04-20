@@ -129,4 +129,32 @@ export class AuthController {
 
     res.redirect(redirectUrl);
   }
+
+  @Get('github')
+  @UseGuards(PassportAuthGuard('github'))
+  @ApiOperation({ summary: 'Start GitHub OAuth flow' })
+  @ApiResponse({ status: 302, description: 'Redirects to GitHub OAuth' })
+  async githubAuth() {
+    // This route initiates the GitHub OAuth flow
+    // Passport will handle the redirect to GitHub
+  }
+
+  @Get('github/callback')
+  @UseGuards(PassportAuthGuard('github'))
+  @ApiOperation({ summary: 'GitHub OAuth callback' })
+  @ApiResponse({
+    status: 200,
+    description: 'GitHub OAuth successful',
+    type: AuthResponse,
+  })
+  async githubAuthCallback(@Req() req, @Res() res: Response) {
+    // req.user contains the user data from GithubStrategy
+    const result = req.user;
+
+    // Redirect to frontend with token
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:7080';
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${result.access_token}`;
+
+    res.redirect(redirectUrl);
+  }
 }

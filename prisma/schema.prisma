@@ -30,6 +30,7 @@ model User {
   resetPasswordToken  String?
   resetPasswordExpiry DateTime?
   googleId           String?   @unique
+  githubId           String?   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

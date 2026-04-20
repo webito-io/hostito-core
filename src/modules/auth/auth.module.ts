@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
 import { AuthListener } from './auth.listener';
 import { AuthService } from './auth.service';
+import { GithubStrategy } from './github.strategy';
 import { GoogleStrategy } from './google.strategy';
 import { JwtStrategy } from './jwt.strategy';
 
@@ -24,7 +25,7 @@ dotenv.config();
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, AuthGuard, AuthListener],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, GithubStrategy, AuthGuard, AuthListener],
   exports: [PassportModule, JwtStrategy, AuthGuard],
 })
 export class AuthModule { }

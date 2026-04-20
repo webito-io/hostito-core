@@ -20,6 +20,15 @@ export interface GoogleUser {
   accessToken: string;
 }
 
+export interface GithubUser {
+  githubId: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  picture?: string;
+  accessToken: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -111,7 +120,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    if (!user.password) throw new UnauthorizedException('Please use Google OAuth to login');
+    if (!user.password) throw new UnauthorizedException('Please use OAuth to login');
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
@@ -188,7 +197,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    if (!user.password) throw new UnauthorizedException('Please use Google OAuth to login');
+    if (!user.password) throw new UnauthorizedException('Please use OAuth to login');
 
 
     const isSame = await bcrypt.compare(password, user.password);
@@ -350,6 +359,99 @@ export class AuthService {
             role: { connect: { id: defaultRoleId } },
             organization: { connect: { id: organization.id } },
             emailVerified: true, // Google verified email
+          },
+        });
+
+        // Update user with organization currencyId
+        await this.prisma.organization.update({
+          where: { id: organization.id },
+          data: { currencyId: defaultCurrency.id },
+        });
+      }
+    }
+
+    // Generate JWT token
+    const token = this.signToken(
+      user.id,
+      user.email,
+      user.roleId,
+      user.organizationId,
+    );
+
+    return {
+      user: {
+        ...user,
+        password: undefined,
+        verificationToken: undefined,
+        resetPasswordToken: undefined,
+      },
+      access_token: token,
+    };
+  }
+
+  /**
+   * Find or create user with GitHub OAuth
+   */
+  async findOrCreateUserWithGithub(githubUser: GithubUser) {
+    const { githubId, email, firstName, lastName } = githubUser;
+
+    // GitHub OAuth requires email - if not provided, throw error
+    if (!email) {
+      throw new UnauthorizedException('GitHub email not available. Please make your email public in GitHub settings.');
+    }
+
+    // Check if user exists by githubId
+    let user = await this.prisma.user.findUnique({
+      where: { githubId },
+    });
+
+    if (!user) {
+      // Check if user exists by email
+      user = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (user) {
+        // Link GitHub account to existing user
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { githubId },
+        });
+      } else {
+        // Create new user with GitHub OAuth
+        const defaultCurrency = await this.prisma.currency.findFirst({
+          where: { isDefault: true },
+        });
+        if (!defaultCurrency) {
+          throw new NotFoundException('Default currency not found');
+        }
+
+        const defaultRoleSetting = await this.prisma.setting.findUnique({
+          where: { key: 'default_role' },
+        });
+        if (!defaultRoleSetting) {
+          throw new NotFoundException('Default role setting not found');
+        }
+        const defaultRoleId = defaultRoleSetting.value as number;
+
+        // Create organization
+        const organization = await this.prisma.organization.create({
+          data: {
+            name: `${(lastName || email.split('@')[0]).trim()}'s Organization`,
+            currency: { connect: { id: defaultCurrency.id } },
+          },
+        });
+
+        // Create user
+        user = await this.prisma.user.create({
+          data: {
+            email,
+            firstName,
+            lastName,
+            githubId,
+            role: { connect: { id: defaultRoleId } },
+            organization: { connect: { id: organization.id } },
+            emailVerified: true, // GitHub verified email
           },
         });
 
