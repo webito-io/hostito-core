@@ -7,6 +7,7 @@ import { PaymentGatewaysHandler } from '../payments/payment-gateways.handler';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrdersService } from './orders.service';
 
+import { TaxesCalculator } from '../taxes/taxes.calculator';
 import { AuthenticatedRequest } from '../../common/interfaces/request.interface';
 
 interface MockPrismaService {
@@ -46,6 +47,8 @@ describe('OrdersService - checkout()', () => {
       id: i + 1,
       cartId: 10,
       productId: i + 1,
+      variantId: i + 1,
+      variant: { price: 100 },
       quantity: 1,
       config: null,
     }));
@@ -118,6 +121,10 @@ describe('OrdersService - checkout()', () => {
         { provide: CurrenciesCalculator, useValue: currencyConverterMock },
         { provide: CouponsCalculator, useValue: couponsCalculatorMock },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+        {
+          provide: TaxesCalculator,
+          useValue: { getRate: jest.fn().mockResolvedValue(9) },
+        },
       ],
     }).compile();
 

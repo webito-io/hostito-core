@@ -15,8 +15,12 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return the API info object', () => {
+      expect(appController.getHello()).toEqual({
+        message: 'Hostito Core API',
+        version: '0.1.0',
+        docs: '/api',
+      });
     });
   });
 });

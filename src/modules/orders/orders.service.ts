@@ -93,18 +93,8 @@ export class OrdersService {
         },
       });
 
-      /* calculate variant prices batch */
-      const variantPrices = await this.currencyConverter.convert(
-        cartItems.map((item) => ({
-          id: item.variantId,
-          amount: item.variant.price,
-          currencyId: products.find((p) => p.id === item.productId)!.currencyId,
-        })),
-        organization.currencyId,
-      );
-
+      /* product validation batch */
       for (const item of cartItems) {
-        /* product validation */
         const product = products.find((p) => p.id === item.productId);
         if (!product) {
           throw new BadRequestException(
@@ -116,6 +106,20 @@ export class OrdersService {
             `Product "${product.name}" is not active`,
           );
         }
+      }
+
+      /* calculate variant prices batch */
+      const variantPrices = await this.currencyConverter.convert(
+        cartItems.map((item) => ({
+          id: item.variantId,
+          amount: item.variant.price,
+          currencyId: products.find((p) => p.id === item.productId)!.currencyId,
+        })),
+        organization.currencyId,
+      );
+
+      for (const item of cartItems) {
+        const product = products.find((p) => p.id === item.productId)!;
 
         /* variant price in org currency */
         const priceNewCurrency = variantPrices.find(
