@@ -7,8 +7,13 @@ import { CurrenciesModule } from '../currencies/currencies.module';
 import { TaxesModule } from '../taxes/taxes.module';
 
 @Module({
-  imports: [PaymentGatewaysModule, CouponsModule, CurrenciesModule, TaxesModule],
+  imports: [
+    PaymentGatewaysModule,
+    CouponsModule,
+    CurrenciesModule,
+    TaxesModule,
+  ],
   controllers: [OrdersController],
   providers: [OrdersService],
 })
-export class OrdersModule { }
+export class OrdersModule {}

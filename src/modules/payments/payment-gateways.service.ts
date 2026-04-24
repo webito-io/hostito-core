@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdatePaymentGatewayDto } from './dto/update-payment-gateway.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Injectable()
 export class PaymentGatewaysService {
@@ -90,7 +91,10 @@ export class PaymentGatewaysService {
     });
   }
 
-  async findAllPayments(query: PaginationDto, user: any) {
+  async findAllPayments(
+    query: PaginationDto,
+    user: AuthenticatedRequest['user'],
+  ) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 

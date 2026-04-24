@@ -37,20 +37,24 @@ export class RegistrarsWorker extends WorkerHost {
 
     const provider = this.registrarsFactory.get(
       registrar.name as DomainProviderType,
-    );
+    ) as unknown as Record<string, (args: any) => Promise<{ status: string }>>;
 
-    if (typeof provider[action] !== 'function') {
-      throw new Error(`Action ${action} unsupported by registrar ${registrar.name}`);
+    const actionFn = provider[action];
+
+    if (typeof actionFn !== 'function') {
+      throw new Error(
+        `Action ${action} unsupported by registrar ${registrar.name}`,
+      );
     }
 
-    const result = await provider[action]({
+    const result = await actionFn({
       domain,
       registrar,
       organization: domain.organization,
       ...extraArgs,
     });
 
-    if (result.status === 'success' && action === 'register') {
+    if (result && result.status === 'success' && action === 'register') {
       await this.prisma.domain.update({
         where: { id: domainId },
         data: { status: 'ACTIVE' },
@@ -61,5 +65,5 @@ export class RegistrarsWorker extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
-  onFailed(job: Job, error: Error) {}
+  onFailed(_job: Job, _error: Error) {}
 }

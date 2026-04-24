@@ -4,34 +4,37 @@ export class CryptoProvider {
   constructor() {}
 
   async initiate({
-    gateway,
+    _gateway,
     amount,
     currency,
     transactionId,
   }: {
-    gateway: PaymentGateway;
+    _gateway: PaymentGateway;
     amount: number;
     currency: string;
     transactionId: number;
   }) {
-    return {
+    return Promise.resolve({
       status: true,
       amount,
       currency,
       transactionId,
       address: '0xMockCryptoAddressForTesting1234567890',
-    };
+    });
   }
 
-  async verify(transaction: Transaction, data) {
-    return {
+  async verify(transaction: Transaction, _data: any) {
+    return Promise.resolve({
       status: 'failed',
       transactionId: transaction.id,
-    };
+    });
   }
 
-  async webhook(gateway: PaymentGateway, headers: any, rawBody: Buffer) {
+  async webhook(_gateway: PaymentGateway, _headers: any, _rawBody: Buffer) {
     // TODO: Implement Crypto webhook verification
-    return { status: 'failed', transactionId: undefined as number | undefined };
+    return Promise.resolve({
+      status: 'failed',
+      transactionId: undefined as number | undefined,
+    });
   }
 }

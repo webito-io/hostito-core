@@ -16,7 +16,7 @@ export class OutboxProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly moduleRef: ModuleRef,
-  ) { }
+  ) {}
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async processOutbox() {
@@ -44,24 +44,30 @@ export class OutboxProcessor {
           where: { id: event.id },
           data: { status: 'PROCESSED', processedAt: new Date() },
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         const retries = event.retries + 1;
+        const message =
+          error instanceof Error ? error.message : 'Unknown error';
         await this.prisma.outboxEvent.update({
           where: { id: event.id },
           data: {
             retries,
-            lastError: error.message,
+            lastError: message,
             ...(retries >= MAX_RETRIES && { status: 'FAILED' }),
           },
         });
-        this.logger.error(`Failed to dispatch outbox event ${event.id}: ${error.message}`);
+        this.logger.error(
+          `Failed to dispatch outbox event ${event.id}: ${message}`,
+        );
       }
     }
   }
 
   private getQueue(queueName: string): Queue {
     if (!this.queueCache.has(queueName)) {
-      const queue = this.moduleRef.get<Queue>(getQueueToken(queueName), { strict: false });
+      const queue = this.moduleRef.get<Queue>(getQueueToken(queueName), {
+        strict: false,
+      });
       this.queueCache.set(queueName, queue);
     }
     return this.queueCache.get(queueName)!;

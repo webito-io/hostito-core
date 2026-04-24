@@ -38,7 +38,7 @@ export class SmtpProvider {
       });
 
       return { status: true, message: 'Email sent successfully' };
-    } catch (e) {
+    } catch {
       return { status: false, message: 'Failed to send email' };
     }
   }

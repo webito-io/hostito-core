@@ -72,4 +72,4 @@ import { RegistrarsModule } from './modules/registrars/registrars.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

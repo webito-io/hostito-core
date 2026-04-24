@@ -27,6 +27,7 @@ import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { OptionalAuthGuard } from 'src/common/guards/optional.guard';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @ApiTags('Announcements')
 @Controller('announcements')
@@ -50,7 +51,10 @@ export class AnnouncementsController {
     summary: 'List all announcements with pagination and filter',
   })
   @ApiOkResponse({ type: [Announcement] })
-  async findAll(@Query() query: PaginationDto, @Req() req) {
+  async findAll(
+    @Query() query: PaginationDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.announcementsService.findAll(query, req.user);
   }
 
@@ -59,7 +63,10 @@ export class AnnouncementsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a single announcement' })
   @ApiOkResponse({ type: Announcement })
-  async findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.announcementsService.findOne(id, req.user);
   }
 

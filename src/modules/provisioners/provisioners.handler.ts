@@ -44,8 +44,10 @@ export class ProvisionersHandler {
         status: 'pending',
         message: `Action ${actionName} added to provisioners queue`,
       };
-    } catch (error: any) {
-      return { status: 'failed', message: error.message };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Unknown error occurred';
+      return { status: 'failed', message };
     }
   }
 

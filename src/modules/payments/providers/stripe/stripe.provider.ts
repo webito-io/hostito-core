@@ -56,17 +56,23 @@ export class StripeProvider {
         url: session.url,
         sessionId: session.id,
       };
-    } catch (err: any) {
-      throw new BadGatewayException(
-        `Payment gateway error: ${err.message || 'Stripe request failed'}`,
-      );
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Stripe request failed';
+      throw new BadGatewayException(`Payment gateway error: ${message}`);
     }
   }
 
-  async verify(transaction: Transaction, data) {}
+  async verify(_transaction: Transaction, _data: any) {
+    return Promise.resolve({});
+  }
 
-  async webhook(gateway: PaymentGateway, headers: any, rawBody: Buffer) {
-    const sig = headers['stripe-signature'];
+  async webhook(
+    gateway: PaymentGateway,
+    headers: Record<string, any>,
+    rawBody: Buffer,
+  ) {
+    const sig = headers['stripe-signature'] as string;
 
     const config = gateway.config as unknown as StripeConfig;
 
@@ -82,14 +88,15 @@ export class StripeProvider {
       );
 
       const session = event.data.object as Stripe.Checkout.Session;
-      return {
+      return Promise.resolve({
         status: 'success',
         transactionId: session.client_reference_id
           ? Number(session.client_reference_id)
           : undefined,
-      };
-    } catch (err) {
-      return { status: 'failed', error: err.message };
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      return Promise.resolve({ status: 'failed', error: message });
     }
   }
 }

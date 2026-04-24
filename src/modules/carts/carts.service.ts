@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CartItemDto } from './dto/cart-item.dto';
 import { User } from '@prisma/client';
@@ -207,7 +211,9 @@ export class CartsService {
     }
 
     if (cartItem.product.type === 'DOMAIN') {
-      throw new BadRequestException('Domain items cannot be updated, remove and re-add instead');
+      throw new BadRequestException(
+        'Domain items cannot be updated, remove and re-add instead',
+      );
     }
 
     return this.prisma.cartItem.update({

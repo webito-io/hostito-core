@@ -28,12 +28,18 @@ export class RegistrarsService {
 
   async activate(id: number) {
     await this.findOne(id);
-    return this.prisma.registrar.update({ where: { id }, data: { isActive: true } });
+    return this.prisma.registrar.update({
+      where: { id },
+      data: { isActive: true },
+    });
   }
 
   async deactivate(id: number) {
     await this.findOne(id);
-    return this.prisma.registrar.update({ where: { id }, data: { isActive: false } });
+    return this.prisma.registrar.update({
+      where: { id },
+      data: { isActive: false },
+    });
   }
 
   async configure(id: number, dto: UpdateRegistrarDto) {

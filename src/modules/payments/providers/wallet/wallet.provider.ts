@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Inject, forwardRef } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { PaymentGateway, Transaction } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -9,7 +9,7 @@ export class WalletProvider {
   constructor(
     private readonly prisma: PrismaService,
     private readonly moduleRef: ModuleRef,
-  ) { }
+  ) {}
 
   async initiate({
     amount,
@@ -29,7 +29,9 @@ export class WalletProvider {
     }
 
     // Lazily get WalletsService to avoid circular dependency
-    const walletsService = this.moduleRef.get(WalletsService, { strict: false });
+    const walletsService = this.moduleRef.get(WalletsService, {
+      strict: false,
+    });
 
     // Use centralized balance service
     const { balance } = await walletsService.getBalance(
@@ -50,11 +52,14 @@ export class WalletProvider {
     };
   }
 
-  async verify(transaction: Transaction, data: any) {
-    return { status: 'success' };
+  async verify(_transaction: Transaction, _data: any) {
+    return Promise.resolve({ status: 'success' });
   }
 
-  async webhook(gateway: PaymentGateway, headers: any, rawBody: Buffer) {
-    return { status: 'failed', message: 'Wallet does not support webhooks' };
+  async webhook(_gateway: PaymentGateway, _headers: any, _rawBody: Buffer) {
+    return Promise.resolve({
+      status: 'failed',
+      message: 'Wallet does not support webhooks',
+    });
   }
 }

@@ -4,6 +4,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Injectable()
 export class AnnouncementsService {
@@ -15,7 +16,10 @@ export class AnnouncementsService {
     });
   }
 
-  async findAll(query: PaginationDto, currentUser?) {
+  async findAll(
+    query: PaginationDto,
+    currentUser?: AuthenticatedRequest['user'],
+  ) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
@@ -39,7 +43,7 @@ export class AnnouncementsService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number, currentUser?) {
+  async findOne(id: number, currentUser?: AuthenticatedRequest['user']) {
     const canViewAll =
       currentUser && hasPermission(currentUser, 'announcements', 'read', 'all');
 
@@ -56,17 +60,8 @@ export class AnnouncementsService {
   }
 
   async update(id: number, updateAnnouncementDto: UpdateAnnouncementDto) {
-    const announcement = await this.findOne(id, {
-      role: {
-        permissions: [
-          { resource: 'announcements', action: 'read', scope: 'all' },
-        ],
-      },
-    }); // Hack to bypass the isActive check for update
-    if (!announcement) {
-      throw new NotFoundException(`Announcement #${id} not found`);
-    }
-    return await this.prisma.announcement.update({
+    await this.findById(id);
+    return this.prisma.announcement.update({
       where: { id },
       data: updateAnnouncementDto,
     });
@@ -87,7 +82,7 @@ export class AnnouncementsService {
     if (!announcement) {
       throw new NotFoundException(`Announcement #${id} not found`);
     }
-    return await this.prisma.announcement.delete({
+    return this.prisma.announcement.delete({
       where: { id },
     });
   }

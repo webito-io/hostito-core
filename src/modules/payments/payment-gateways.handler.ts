@@ -7,6 +7,25 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService, OutboxEventInput } from '../outbox/outbox.service';
 import { Prisma } from '@prisma/client';
 
+export interface InitiateResult {
+  paid?: boolean;
+  status: boolean | string;
+  url?: string;
+  sessionId?: string;
+  [key: string]: any;
+}
+
+export interface VerificationResult {
+  status: string;
+  [key: string]: any;
+}
+
+export interface WebhookResult {
+  status: string;
+  transactionId?: number;
+  [key: string]: any;
+}
+
 @Injectable()
 export class PaymentGatewaysHandler {
   constructor(
@@ -15,7 +34,7 @@ export class PaymentGatewaysHandler {
     private readonly paymentFactory: PaymentFactory,
     private readonly outboxService: OutboxService,
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   async create(createPaymentDto: CreatePaymentDto) {
     const paymentGateway = await this.paymentGatewaysService.findOne(
@@ -34,7 +53,9 @@ export class PaymentGatewaysHandler {
       throw new Error('Currency not found');
     }
 
-    const provider = this.paymentFactory.get(paymentGateway.name);
+    const provider = this.paymentFactory.get(
+      paymentGateway.name,
+    ) as unknown as Record<string, (...args: any[]) => Promise<InitiateResult>>;
     const result = await provider.initiate({
       gateway: paymentGateway,
       amount: createPaymentDto.amount,
@@ -43,7 +64,7 @@ export class PaymentGatewaysHandler {
     });
 
     /* If the payment is already paid (e.g. via Wallet), complete it immediately */
-    if ((result as any).paid) {
+    if (result.paid) {
       const transaction = await this.prisma.transaction.findUnique({
         where: { id: createPaymentDto.transactionId },
       });
@@ -75,7 +96,7 @@ export class PaymentGatewaysHandler {
     return result;
   }
 
-  async verify(transactionId: number, data) {
+  async verify(transactionId: number, data: Record<string, any>) {
     const transaction = await this.prisma.transaction.findUnique({
       where: { id: transactionId, status: { not: 'COMPLETED' } },
     });
@@ -90,8 +111,11 @@ export class PaymentGatewaysHandler {
       throw new Error('Payment gateway not found');
     }
 
-    const provider = this.paymentFactory.get(gateway.name);
-    const verificationResult = (await provider.verify(transaction, data)) as any;
+    const provider = this.paymentFactory.get(gateway.name) as unknown as Record<
+      string,
+      (...args: any[]) => Promise<VerificationResult>
+    >;
+    const verificationResult = await provider.verify(transaction, data);
     const isSuccess = verificationResult?.status === 'success';
 
     let paidInvoiceId: number | null = null;
@@ -120,8 +144,15 @@ export class PaymentGatewaysHandler {
     return result;
   }
 
-  async webhook(gatewayName: string, headers, rawBody) {
-    const provider = this.paymentFactory.get(gatewayName);
+  async webhook(
+    gatewayName: string,
+    headers: Record<string, any>,
+    rawBody: Buffer,
+  ) {
+    const provider = this.paymentFactory.get(gatewayName) as unknown as Record<
+      string,
+      (...args: any[]) => Promise<WebhookResult>
+    >;
 
     const gateway = await this.prisma.paymentGateway.findUnique({
       where: { name: gatewayName },
@@ -130,7 +161,7 @@ export class PaymentGatewaysHandler {
       throw new Error('Payment gateway not found');
     }
 
-    const verify = (await provider.webhook(gateway, headers, rawBody)) as any;
+    const verify = await provider.webhook(gateway, headers, rawBody);
     const isSuccess = verify.transactionId && verify.status === 'success';
     if (!isSuccess) {
       return {
@@ -142,7 +173,7 @@ export class PaymentGatewaysHandler {
     let paidInvoiceId: number | null = null;
     await this.prisma.$transaction(async (tx) => {
       const updatedTransaction = await tx.transaction.update({
-        where: { id: verify.transactionId },
+        where: { id: verify.transactionId as number },
         data: { status: 'COMPLETED' },
       });
 
@@ -200,7 +231,11 @@ export class PaymentGatewaysHandler {
           type: 'provisioner',
           queue: 'provisioners',
           jobName: 'execute-action',
-          payload: { serviceId: item.serviceId, actionName: 'renew', extraArgs: {} },
+          payload: {
+            serviceId: item.serviceId,
+            actionName: 'renew',
+            extraArgs: {},
+          },
         });
       } else if (item.domainId) {
         events.push({
@@ -223,7 +258,11 @@ export class PaymentGatewaysHandler {
           type: 'provisioner',
           queue: 'provisioners',
           jobName: 'execute-action',
-          payload: { serviceId: service.id, actionName: 'create', extraArgs: { serviceStatus: 'ACTIVE' } },
+          payload: {
+            serviceId: service.id,
+            actionName: 'create',
+            extraArgs: { serviceStatus: 'ACTIVE' },
+          },
         });
       }
     }
@@ -233,9 +272,16 @@ export class PaymentGatewaysHandler {
       .filter((item) => item.product?.type === 'DOMAIN')
       .map((item) => {
         try {
-          return typeof item.description === 'string'
-            ? JSON.parse(item.description)?.domain
-            : (item.description as any)?.domain;
+          if (typeof item.description === 'string') {
+            const parsed = JSON.parse(item.description) as Record<
+              string,
+              unknown
+            >;
+            return parsed?.domain as string | null;
+          }
+          return (item.description as Record<string, unknown>)?.domain as
+            | string
+            | null;
         } catch {
           return null;
         }
@@ -251,7 +297,9 @@ export class PaymentGatewaysHandler {
         },
       });
       for (const domain of domains) {
-        const isRenewal = invoice.items.some((item) => item.domainId === domain.id);
+        const isRenewal = invoice.items.some(
+          (item) => item.domainId === domain.id,
+        );
         if (!isRenewal) {
           events.push({
             type: 'domain',

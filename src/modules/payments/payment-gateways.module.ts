@@ -23,4 +23,4 @@ import { WalletProvider } from './providers/wallet/wallet.provider';
   ],
   exports: [PaymentGatewaysHandler],
 })
-export class PaymentGatewaysModule { }
+export class PaymentGatewaysModule {}

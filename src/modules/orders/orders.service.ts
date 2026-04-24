@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { InvoiceStatus, User } from '@prisma/client';
+import { InvoiceStatus, Product, ProductVariant } from '@prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { CouponsCalculator } from '../coupons/coupons.calculator';
 import { CurrenciesCalculator } from '../currencies/currencies.calculator';
@@ -14,6 +14,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
+
+interface OrderItemWithProduct {
+  productId: number;
+  variantId: number;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  config?: Record<string, any>;
+  product: Product;
+  variant: ProductVariant;
+}
 
 @Injectable()
 export class OrdersService {
@@ -24,14 +36,17 @@ export class OrdersService {
     private readonly paymentGatewaysHandler: PaymentGatewaysHandler,
     private readonly currencyConverter: CurrenciesCalculator,
     private readonly taxesCalculator: TaxesCalculator,
-  ) { }
+  ) {}
 
   /**
    * Checkout the cart
    * @param createOrderDto
    * @returns
    */
-  async checkout(createOrderDto: CreateOrderDto, currentUser) {
+  async checkout(
+    createOrderDto: CreateOrderDto,
+    currentUser: AuthenticatedRequest['user'],
+  ) {
     const result = await this.prisma.$transaction(async (prisma) => {
       const organization = await prisma.organization.findUnique({
         where: {
@@ -66,7 +81,7 @@ export class OrdersService {
       let total = 0;
       let discount = 0;
       let tax = 0;
-      const orderItemsWithProduct: any[] = [];
+      const orderItemsWithProduct: OrderItemWithProduct[] = [];
 
       /* get products batch */
       const productIds = cartItems.map((item) => item.productId);
@@ -90,9 +105,7 @@ export class OrdersService {
 
       for (const item of cartItems) {
         /* product validation */
-        const product = products.find(
-          (product) => product.id === item.productId,
-        );
+        const product = products.find((p) => p.id === item.productId);
         if (!product) {
           throw new BadRequestException(
             `Product #${item.productId} is no longer available`,
@@ -118,10 +131,14 @@ export class OrdersService {
 
         /* order items with product */
         orderItemsWithProduct.push({
-          ...item,
-          product,
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: item.quantity,
           unitPrice: priceNewCurrency,
           total: priceNewCurrency * item.quantity,
+          config: (item.config as Record<string, any>) || {},
+          product,
+          variant: item.variant,
         });
       }
 
@@ -129,10 +146,10 @@ export class OrdersService {
       const couponCode = createOrderDto.coupon || cart.couponCode;
       const coupon = couponCode
         ? await prisma.coupon.findUnique({
-          where: {
-            code: couponCode,
-          },
-        })
+            where: {
+              code: couponCode,
+            },
+          })
         : null;
       if (coupon) {
         const couponDiscount = await this.couponsCalculator.calculateDiscount(
@@ -185,9 +202,13 @@ export class OrdersService {
       /* create pending domains */
       const domainNames = orderItemsWithProduct
         .filter(
-          (item) => item.product?.type === 'DOMAIN' && item.config?.domain,
+          (item) =>
+            item.product?.type === 'DOMAIN' &&
+            (item.config as Record<string, unknown>)?.domain,
         )
-        .map((item) => (item.config as any).domain);
+        .map(
+          (item) => (item.config as Record<string, unknown>).domain as string,
+        );
 
       if (domainNames.length > 0) {
         await prisma.domain.createMany({
@@ -265,7 +286,7 @@ export class OrdersService {
     this.eventEmitter.emit('order.created', result.order);
 
     /* If the invoice is marked as PENDING, create a payment transaction */
-    let payment;
+    let payment: unknown;
     if (result.invoice.status === InvoiceStatus.PENDING) {
       payment = await this.paymentGatewaysHandler.create({
         amount: result.invoice.total,
@@ -288,7 +309,7 @@ export class OrdersService {
    * @param user
    * @returns
    */
-  async pay(id: number, gatewayId: number, user: User) {
+  async pay(id: number, gatewayId: number, user: AuthenticatedRequest['user']) {
     const order = await this.prisma.order.findUnique({
       where: {
         id,
@@ -353,12 +374,11 @@ export class OrdersService {
 
   /**
    * Find all orders
-   * @param page
-   * @param limit
+   * @param query
    * @param user
    * @returns
    */
-  async findAll(query: PaginationDto, user: User) {
+  async findAll(query: PaginationDto, user: AuthenticatedRequest['user']) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
@@ -393,8 +413,8 @@ export class OrdersService {
    * @param user
    * @returns
    */
-  async findOne(id: number, user: User) {
-    let where: any = {};
+  async findOne(id: number, user: AuthenticatedRequest['user']) {
+    let where = {};
 
     if (!hasPermission(user, 'orders', 'read', 'all')) {
       where = { organizationId: user.organizationId };

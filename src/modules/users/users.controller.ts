@@ -26,6 +26,7 @@ import { UpdateOwnUserDto } from './dto/update-own-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @ApiTags('Users')
 @Controller('users')
@@ -43,7 +44,7 @@ export class UsersController {
     type: UserEntity,
   })
   async create(@Body() createUserDto: CreateUserDto) {
-    return await this.usersService.create(createUserDto);
+    return this.usersService.create(createUserDto);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -57,7 +58,7 @@ export class UsersController {
     type: [UserEntity],
   })
   async findAll(@Query() query: PaginationDto) {
-    return await this.usersService.findAll(query);
+    return this.usersService.findAll(query);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -72,7 +73,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.usersService.findOne(id);
+    return this.usersService.findOne(id);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -85,8 +86,11 @@ export class UsersController {
     description: 'Profile updated successfully',
     type: UserEntity,
   })
-  async update(@Body() updateOwnUserDto: UpdateOwnUserDto, @Req() req) {
-    return await this.usersService.updateOwn(req.user.id, updateOwnUserDto);
+  async update(
+    @Body() updateOwnUserDto: UpdateOwnUserDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.usersService.updateOwn(req.user.id, updateOwnUserDto);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -104,7 +108,7 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return await this.usersService.updateOwn(id, updateUserDto);
+    return this.usersService.updateOwn(id, updateUserDto);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -115,6 +119,6 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
-    return await this.usersService.remove(id);
+    return this.usersService.remove(id);
   }
 }

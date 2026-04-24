@@ -67,10 +67,12 @@ export class CpanelProvider implements ProvisionerProvider {
 
     if (!response.ok) throw new Error(`HTTP Error: ${response.statusText}`);
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      metadata?: { result: number; reason: string };
+    };
     if (data.metadata?.result === 0) throw new Error(data.metadata.reason);
 
-    return data;
+    return data as T;
   }
 
   async create(args: ProvisioningArgs): Promise<ProvisionResult> {
@@ -86,8 +88,7 @@ export class CpanelProvider implements ProvisionerProvider {
           .replace(/[^a-zA-Z0-9]/g, '') + Math.floor(Math.random() * 100);
     }
 
-    const password =
-      service.password || this.generateSecurePassword(10);
+    const password = service.password || this.generateSecurePassword(10);
     const plan =
       (service.product?.config as Record<string, unknown>)?.cpanel_package ||
       'default';
@@ -97,10 +98,12 @@ export class CpanelProvider implements ProvisionerProvider {
       throw new Error('Missing domain, username or password');
     }
 
+    const planStr = typeof plan === 'string' ? plan : JSON.stringify(plan);
+
     const data = await this.request<Record<string, unknown>>(
       server,
       'createacct',
-      { username, domain, password, plan: String(plan), contactemail },
+      { username, domain, password, plan: planStr, contactemail },
     );
     return { status: 'success', username, password, data };
   }
@@ -141,14 +144,17 @@ export class CpanelProvider implements ProvisionerProvider {
   async pkg(args: ProvisioningArgs): Promise<ProvisionResult> {
     const { service, server, newPackage } = args;
     if (!service.username) throw new Error('Missing username');
-    const pkgName =
-      typeof newPackage === 'string'
-        ? newPackage
-        : (newPackage as Record<string, unknown>)?.cpanel_package || newPackage;
+    let pkgName = '';
+    if (typeof newPackage === 'string') {
+      pkgName = newPackage;
+    } else if (newPackage && typeof newPackage === 'object') {
+      const pkg = (newPackage as Record<string, unknown>)?.cpanel_package;
+      pkgName = typeof pkg === 'string' ? pkg : JSON.stringify(newPackage);
+    }
     const data = await this.request<Record<string, unknown>>(
       server,
       'changepackage',
-      { user: service.username, pkg: String(pkgName) },
+      { user: service.username, pkg: pkgName },
     );
     return { status: 'success', data };
   }
@@ -163,15 +169,16 @@ export class CpanelProvider implements ProvisionerProvider {
     return { status: 'success', data };
   }
 
-  async renew(args: ProvisioningArgs): Promise<ProvisionResult> {
+  async renew(_args: ProvisioningArgs): Promise<ProvisionResult> {
     // For cPanel, renew might just mean unsuspending or updating metadata
     // In many cases, it's a no-op if the service was ACTIVE.
+    await Promise.resolve();
     return { status: 'success', message: 'Account renewed successfully' };
   }
 
   async testConnection(
     server: Server,
-    provisioner: Provisioner,
+    _provisioner: Provisioner,
   ): Promise<boolean> {
     try {
       await this.request(server, 'version', {});

@@ -30,7 +30,10 @@ export class CategoryEntity {
 }
 
 export class CategoryTreeEntity extends CategoryEntity {
-  @ApiProperty({ type: () => [CategoryTreeEntity], description: 'Subcategories' })
+  @ApiProperty({
+    type: () => [CategoryTreeEntity],
+    description: 'Subcategories',
+  })
   children: CategoryTreeEntity[];
 }
 

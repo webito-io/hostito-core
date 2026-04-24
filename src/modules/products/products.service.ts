@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { productSelect } from './selects/product.select';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Injectable()
 export class ProductsService {
@@ -23,7 +24,7 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto) {
     const { variants, ...productData } = createProductDto;
 
-    return await this.prisma.product.create({
+    return this.prisma.product.create({
       data: {
         ...productData,
         variants: {
@@ -41,7 +42,10 @@ export class ProductsService {
    * @returns
    */
 
-  async findAll({ page, limit }: PaginationDto, currentUser?) {
+  async findAll(
+    { page, limit }: PaginationDto,
+    currentUser?: AuthenticatedRequest['user'],
+  ) {
     const pageNumber = page || 1;
     const pageSize = limit || 10;
 
@@ -72,7 +76,7 @@ export class ProductsService {
    * @returns
    */
 
-  async findOne(id: number, currentUser?) {
+  async findOne(id: number, currentUser?: AuthenticatedRequest['user']) {
     const canView =
       currentUser && hasPermission(currentUser, 'products', 'read', 'all');
     const where = canView ? {} : { isActive: true };
@@ -95,7 +99,11 @@ export class ProductsService {
    * @returns
    */
 
-  async update(id: number, updateProductDto: UpdateProductDto, currentUser?) {
+  async update(
+    id: number,
+    updateProductDto: UpdateProductDto,
+    currentUser?: AuthenticatedRequest['user'],
+  ) {
     const canUpdate =
       currentUser && hasPermission(currentUser, 'products', 'update', 'all');
     if (!canUpdate) {
@@ -106,7 +114,7 @@ export class ProductsService {
 
     const { variants, ...productData } = updateProductDto;
 
-    return await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       if (variants) {
         await tx.productVariant.deleteMany({ where: { productId: id } });
         await tx.productVariant.createMany({
@@ -128,7 +136,7 @@ export class ProductsService {
    * @param currentUser
    * @returns
    */
-  async remove(id: number, currentUser?) {
+  async remove(id: number, currentUser?: AuthenticatedRequest['user']) {
     const canDelete =
       currentUser && hasPermission(currentUser, 'products', 'delete', 'all');
     if (!canDelete) {
@@ -137,7 +145,7 @@ export class ProductsService {
       );
     }
 
-    return await this.prisma.product.delete({
+    return this.prisma.product.delete({
       where: { id },
     });
   }

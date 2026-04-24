@@ -10,7 +10,7 @@ export class InvoicesListener {
     private readonly prisma: PrismaService,
     private readonly notificationsHandler: NotificationsHandler,
     private readonly auditService: AuditLogsService,
-  ) { }
+  ) {}
 
   @OnEvent('invoice.paid')
   async handleInvoicePaid(payload: { invoiceId: number }) {

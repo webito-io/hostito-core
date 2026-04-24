@@ -8,12 +8,11 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class WalletsService {
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly currenciesCalculator: CurrenciesCalculator,
     private readonly moduleRef: ModuleRef,
-  ) { }
+  ) {}
 
   async balance(organizationId: number, targetCurrencyId?: number) {
     return this.getBalance(organizationId, targetCurrencyId);
@@ -61,7 +60,9 @@ export class WalletsService {
   }
 
   async deposit(depositWalletDto: DepositWalletDto, user: User) {
-    const paymentGatewaysHandler = this.moduleRef.get(PaymentGatewaysHandler, { strict: false });
+    const paymentGatewaysHandler = this.moduleRef.get(PaymentGatewaysHandler, {
+      strict: false,
+    });
 
     const organization = await this.prisma.organization.findUnique({
       where: { id: user.organizationId },
@@ -91,5 +92,4 @@ export class WalletsService {
 
     return { transaction, payment };
   }
-
 }

@@ -7,13 +7,38 @@ import { PaymentGatewaysHandler } from '../payments/payment-gateways.handler';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrdersService } from './orders.service';
 
+import { AuthenticatedRequest } from '../../common/interfaces/request.interface';
+
+interface MockPrismaService {
+  organization: { findUnique: jest.Mock };
+  cart: { update: jest.Mock };
+  cartItem: { findMany: jest.Mock; deleteMany: jest.Mock };
+  product: { findMany: jest.Mock };
+  coupon: { findUnique: jest.Mock; update: jest.Mock };
+  tax: { findMany: jest.Mock };
+  order: { create: jest.Mock };
+  invoice: { create: jest.Mock };
+  transaction: { create: jest.Mock };
+  $transaction: jest.Mock;
+}
+
+interface MockCurrencyConverter {
+  convert: jest.Mock;
+}
+
+interface MockCouponsCalculator {
+  calculateDiscount: jest.Mock;
+}
+
 describe('OrdersService - checkout()', () => {
   let service: OrdersService;
-  let prismaMock: any;
-  let currencyConverterMock: any;
-  let couponsCalculatorMock: any;
+  let prismaMock: MockPrismaService;
+  let currencyConverterMock: MockCurrencyConverter;
+  let couponsCalculatorMock: MockCouponsCalculator;
 
-  const currentUser = { organizationId: 1 };
+  const currentUser = {
+    organizationId: 1,
+  } as unknown as AuthenticatedRequest['user'];
   const baseDto = { gatewayId: 1, coupon: undefined };
 
   const makeItems = (count: number) =>
@@ -60,12 +85,19 @@ describe('OrdersService - checkout()', () => {
         }),
       },
       transaction: { create: jest.fn().mockResolvedValue({ id: 300 }) },
-      $transaction: jest.fn().mockImplementation((cb) => cb(prismaMock)),
+      $transaction: jest
+        .fn()
+        .mockImplementation((cb: (tx: any) => Promise<any>) => cb(prismaMock)),
     };
 
     currencyConverterMock = {
-      convert: jest.fn((items) =>
-        Promise.resolve(items.map((i) => ({ id: i.id, amount: i.amount }))),
+      convert: jest.fn((items: { id: number; amount: number }[]) =>
+        Promise.resolve(
+          items.map((i) => ({
+            id: i.id,
+            amount: i.amount,
+          })),
+        ),
       ),
     };
 
@@ -94,21 +126,30 @@ describe('OrdersService - checkout()', () => {
 
   describe('Core Logic', () => {
     it('should complete checkout successfully with all side-effects', async () => {
-      const res = await service.checkout(baseDto, currentUser);
+      const res = (await service.checkout(baseDto, currentUser)) as unknown as {
+        order: { id: number };
+      };
       expect(res.order.id).toBe(100);
+
       expect(prismaMock.cart.update).toHaveBeenCalledTimes(2); // Set PROCESSING -> Set ACTIVE
+
       expect(prismaMock.cartItem.deleteMany).toHaveBeenCalled();
+
       expect(currencyConverterMock.convert).toHaveBeenCalledTimes(1); // Batch conversion
     });
 
     it('should apply coupon and calculate tax correctly', async () => {
       prismaMock.coupon.findUnique.mockResolvedValue({ id: 5 });
+
       couponsCalculatorMock.calculateDiscount.mockResolvedValue(50);
 
       await service.checkout({ ...baseDto, coupon: 'SAVE50' }, currentUser);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
       const orderData = prismaMock.order.create.mock.calls[0][0].data;
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(orderData.discount).toBe(50);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(orderData.total).toBeCloseTo(272.5); // (300-50) * 1.09
     });
 
@@ -126,11 +167,13 @@ describe('OrdersService - checkout()', () => {
   describe('Performance & Concurrency', () => {
     it('should scale efficiently for large carts (500 items)', async () => {
       prismaMock.cartItem.findMany.mockResolvedValue(makeItems(500));
+
       prismaMock.product.findMany.mockResolvedValue(makeProducts(500));
 
       const start = performance.now();
       await service.checkout(baseDto, currentUser);
       expect(performance.now() - start).toBeLessThan(500);
+
       expect(currencyConverterMock.convert).toHaveBeenCalledTimes(1);
     });
 
@@ -145,7 +188,10 @@ describe('OrdersService - checkout()', () => {
 
       // Simultaneous update simulation
       let procCount = 0;
-      prismaMock.cart.update.mockImplementation(async (params) => {
+
+      prismaMock.cart.update.mockImplementation(async (params: any) => {
+        await Promise.resolve();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (params.data.status === 'PROCESSING' && ++procCount > 1)
           throw new Error('Lock Error');
         return {};

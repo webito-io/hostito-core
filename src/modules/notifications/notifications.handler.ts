@@ -25,8 +25,9 @@ export class NotificationsHandler implements INotificationsHandler {
       });
 
       return { status: true, message: 'Notification queued successfully' };
-    } catch (error: any) {
-      return { status: false, message: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { status: false, message };
     }
   }
 }

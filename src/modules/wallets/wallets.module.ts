@@ -10,4 +10,4 @@ import { WalletsService } from './wallets.service';
   providers: [WalletsService],
   exports: [WalletsService],
 })
-export class WalletsModule { }
+export class WalletsModule {}

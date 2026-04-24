@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from '@prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { organizationSelect } from './selects/organization.select';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Injectable()
 export class OrganizationsService {
@@ -27,7 +27,7 @@ export class OrganizationsService {
     });
   }
 
-  async findAll(query: PaginationDto, user: User) {
+  async findAll(query: PaginationDto, user: AuthenticatedRequest['user']) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
@@ -49,8 +49,8 @@ export class OrganizationsService {
     return { data: organizations, total, page, limit };
   }
 
-  async findOne(id: number, user: User) {
-    let where: any = {};
+  async findOne(id: number, user: AuthenticatedRequest['user']) {
+    let where: Record<string, unknown> = {};
     if (!hasPermission(user, 'organizations', 'read', 'all')) {
       where = { id: user.organizationId };
     }
@@ -66,7 +66,7 @@ export class OrganizationsService {
 
   async update(id: number, updateOrganizationDto: UpdateOrganizationDto) {
     const { users, ...data } = updateOrganizationDto;
-    const updatedOrg = await this.prisma.organization.update({
+    return this.prisma.organization.update({
       where: { id },
       data: {
         ...data,
@@ -78,10 +78,9 @@ export class OrganizationsService {
       },
       select: organizationSelect,
     });
-    return updatedOrg;
   }
 
-  async remove(id: number, user: User) {
+  async remove(id: number, user: AuthenticatedRequest['user']) {
     await this.findOne(id, user);
     return this.prisma.organization.delete({
       where: { id },

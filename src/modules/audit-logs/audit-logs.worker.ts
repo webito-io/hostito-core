@@ -1,13 +1,14 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 export interface AuditLogJobData {
   action: string;
   entity: string;
   entityId?: number;
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: unknown;
+  newValue?: unknown;
   ip?: string;
   userAgent?: string;
   userId?: number;
@@ -20,16 +21,16 @@ export class AuditLogsWorker extends WorkerHost {
     super();
   }
 
-  async process(job: Job<AuditLogJobData>): Promise<any> {
+  async process(job: Job<AuditLogJobData>): Promise<void> {
     const data = job.data;
 
-    return await this.prisma.auditLog.create({
+    await this.prisma.auditLog.create({
       data: {
         action: data.action,
         entity: data.entity,
         entityId: data.entityId,
-        oldValue: data.oldValue,
-        newValue: data.newValue,
+        oldValue: data.oldValue as Prisma.InputJsonValue,
+        newValue: data.newValue as Prisma.InputJsonValue,
         ip: data.ip,
         userAgent: data.userAgent,
         userId: data.userId,
@@ -39,7 +40,7 @@ export class AuditLogsWorker extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
-  onFailed(job: Job, error: Error) {
-    console.error(`Audit logging failed for job ${job.id}: ${error.message}`);
+  onFailed(_job: Job, _error: Error) {
+    console.error(`Audit logging failed for job ${_job.id}: ${_error.message}`);
   }
 }

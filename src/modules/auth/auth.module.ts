@@ -25,7 +25,14 @@ dotenv.config();
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, GithubStrategy, AuthGuard, AuthListener],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    GithubStrategy,
+    AuthGuard,
+    AuthListener,
+  ],
   exports: [PassportModule, JwtStrategy, AuthGuard],
 })
-export class AuthModule { }
+export class AuthModule {}

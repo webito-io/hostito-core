@@ -3,9 +3,9 @@ import { CreateCurrencyDto } from './dto/create-currency.dto';
 import { UpdateCurrencyDto } from './dto/update-currency.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { currencySelect } from './selects/currencies.select';
-import { User } from '@prisma/client';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Injectable()
 export class CurrenciesService {
@@ -53,7 +53,7 @@ export class CurrenciesService {
    * @param user
    * @returns
    */
-  async findAll(query: PaginationDto, user: User) {
+  async findAll(query: PaginationDto, user: AuthenticatedRequest['user']) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 

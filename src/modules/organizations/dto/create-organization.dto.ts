@@ -37,12 +37,20 @@ export class CreateOrganizationDto {
   @IsString()
   zip?: string;
 
-  @ApiProperty({ description: 'Country code (ISO 3166-1 alpha-2)', example: 'US', required: false })
+  @ApiProperty({
+    description: 'Country code (ISO 3166-1 alpha-2)',
+    example: 'US',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   country?: string;
 
-  @ApiProperty({ description: 'Users id to connect', type: [Number], required: false })
+  @ApiProperty({
+    description: 'Users id to connect',
+    type: [Number],
+    required: false,
+  })
   @IsOptional()
   @IsArray()
   @Type(() => Number)

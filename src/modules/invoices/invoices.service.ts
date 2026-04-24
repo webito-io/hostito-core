@@ -1,16 +1,13 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { invoiceSelect } from './selects/invoices.select';
 import { hasPermission } from 'src/common/decorators/permission.decorator';
-import { InvoiceStatus, User } from '@prisma/client';
+import { InvoiceStatus } from '@prisma/client';
 import { PaymentGatewaysHandler } from '../payments/payment-gateways.handler';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Injectable()
 export class InvoicesService {
@@ -18,14 +15,17 @@ export class InvoicesService {
     private prisma: PrismaService,
     private emitter: EventEmitter2,
     private paymentGatewaysHandler: PaymentGatewaysHandler,
-  ) { }
+  ) {}
 
   /**
    * Creates a new invoice with associated items and a payment transaction.
    * @param createInvoiceDto - The data to create the invoice.
    * @returns A promise that resolves to the created invoice and payment transaction.
    */
-  async create(createInvoiceDto: CreateInvoiceDto, user: User) {
+  async create(
+    createInvoiceDto: CreateInvoiceDto,
+    user: AuthenticatedRequest['user'],
+  ) {
     const result = await this.prisma.$transaction(async (prisma) => {
       const createdInvoice = await prisma.invoice.create({
         data: {
@@ -62,7 +62,7 @@ export class InvoicesService {
       });
 
       /* If the invoice is marked as PENDING, create a payment transaction */
-      let payment;
+      let payment: unknown;
       if (createInvoiceDto.status === InvoiceStatus.PENDING) {
         payment = await this.paymentGatewaysHandler.create({
           amount: createdInvoice.total,
@@ -86,7 +86,7 @@ export class InvoicesService {
    * @param user
    * @returns
    */
-  async pay(id: number, gatewayId: number, user: User) {
+  async pay(id: number, gatewayId: number, user: AuthenticatedRequest['user']) {
     const invoice = await this.prisma.invoice.findUnique({
       where: {
         id,
@@ -133,7 +133,11 @@ export class InvoicesService {
    * @param user - The user performing the request.
    * @returns A promise that resolves to an object containing the invoices, total count, page number, and limit.
    */
-  async findAll(page: number, limit: number, user: User) {
+  async findAll(
+    page: number,
+    limit: number,
+    user: AuthenticatedRequest['user'],
+  ) {
     let where = {};
     if (!hasPermission(user, 'invoices', 'read', 'all')) {
       where = { organizationId: user.organizationId };
@@ -172,7 +176,7 @@ export class InvoicesService {
    * @param user - The user performing the request.
    * @returns A promise that resolves to the found invoice.
    */
-  async findOne(id: number, user: User) {
+  async findOne(id: number, user: AuthenticatedRequest['user']) {
     let where = {};
     if (!hasPermission(user, 'invoices', 'read', 'all')) {
       where = { organizationId: user.organizationId };
@@ -219,13 +223,13 @@ export class InvoicesService {
           dueDate: updateInvoiceDto.dueDate,
           items: updateInvoiceDto.items
             ? {
-              create: updateInvoiceDto.items.map((item) => ({
-                description: item.description,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                total: item.total,
-              })),
-            }
+                create: updateInvoiceDto.items.map((item) => ({
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  total: item.total,
+                })),
+              }
             : undefined,
         },
         select: invoiceSelect,

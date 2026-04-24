@@ -25,6 +25,8 @@ import { AuthGuard } from '../auth/auth.guard';
 import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { InvoiceEntity } from './entities/invoice.entity';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('Invoices')
 @Controller('invoices')
@@ -41,8 +43,11 @@ export class InvoicesController {
     description: 'Invoice created successfully',
     type: InvoiceEntity,
   })
-  async create(@Body() createInvoiceDto: CreateInvoiceDto, @Req() req) {
-    return await this.invoicesService.create(createInvoiceDto, req.user);
+  async create(
+    @Body() createInvoiceDto: CreateInvoiceDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.invoicesService.create(createInvoiceDto, req.user);
   }
 
   @UseGuards(AuthGuard)
@@ -53,13 +58,9 @@ export class InvoicesController {
   async pay(
     @Param('id', ParseIntPipe) id: number,
     @Body() payInvoiceDto: PayInvoiceDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return await this.invoicesService.pay(
-      id,
-      payInvoiceDto.gatewayId,
-      req.user,
-    );
+    return this.invoicesService.pay(id, payInvoiceDto.gatewayId, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -73,11 +74,14 @@ export class InvoicesController {
     type: [InvoiceEntity],
   })
   async findAll(
-    @Query('page', ParseIntPipe) page: number,
-    @Query('limit', ParseIntPipe) limit: number,
-    @Req() req,
+    @Query() query: PaginationDto,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return await this.invoicesService.findAll(page, limit, req.user);
+    return this.invoicesService.findAll(
+      query.page || 1,
+      query.limit || 10,
+      req.user,
+    );
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -91,8 +95,11 @@ export class InvoicesController {
     type: InvoiceEntity,
   })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return await this.invoicesService.findOne(id, req.user);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.invoicesService.findOne(id, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -110,7 +117,7 @@ export class InvoicesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateInvoiceDto: UpdateInvoiceDto,
   ) {
-    return await this.invoicesService.update(id, updateInvoiceDto);
+    return this.invoicesService.update(id, updateInvoiceDto);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -121,6 +128,6 @@ export class InvoicesController {
   @ApiResponse({ status: 200, description: 'Invoice deleted successfully' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
-    return await this.invoicesService.remove(id);
+    return this.invoicesService.remove(id);
   }
 }

@@ -26,6 +26,7 @@ import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { OrderEntity } from './entities/order.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -41,8 +42,11 @@ export class OrdersController {
     description: 'Order created successfully',
     type: OrderEntity,
   })
-  async checkout(@Body() createOrderDto: CreateOrderDto, @Req() req) {
-    return await this.ordersService.checkout(createOrderDto, req.user);
+  async checkout(
+    @Body() createOrderDto: CreateOrderDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.ordersService.checkout(createOrderDto, req.user);
   }
 
   @UseGuards(AuthGuard)
@@ -53,9 +57,9 @@ export class OrdersController {
   async pay(
     @Param('id', ParseIntPipe) id: number,
     @Body() payOrderDto: PayOrderDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return await this.ordersService.pay(id, payOrderDto.gatewayId, req.user);
+    return this.ordersService.pay(id, payOrderDto.gatewayId, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -68,8 +72,11 @@ export class OrdersController {
     description: 'Return all orders',
     type: [OrderEntity],
   })
-  async findAll(@Query() query: PaginationDto, @Req() req) {
-    return await this.ordersService.findAll(query, req.user);
+  async findAll(
+    @Query() query: PaginationDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.ordersService.findAll(query, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -83,8 +90,11 @@ export class OrdersController {
     type: OrderEntity,
   })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return await this.ordersService.findOne(id, req.user);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.ordersService.findOne(id, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -102,7 +112,7 @@ export class OrdersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrderDto: UpdateOrderDto,
   ) {
-    return await this.ordersService.update(id, updateOrderDto);
+    return this.ordersService.update(id, updateOrderDto);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -113,6 +123,6 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'Order deleted successfully' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
-    return await this.ordersService.remove(id);
+    return this.ordersService.remove(id);
   }
 }

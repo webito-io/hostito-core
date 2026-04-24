@@ -10,4 +10,4 @@ import { AuthModule } from '../auth/auth.module';
   providers: [CategoriesService],
   exports: [CategoriesService],
 })
-export class CategoriesModule { }
+export class CategoriesModule {}

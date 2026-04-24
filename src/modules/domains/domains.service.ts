@@ -7,6 +7,7 @@ import { CheckDomainDto } from './dto/check-domain.dto';
 import { RegistrarsFactory } from '../registrars/registrars.factory';
 import { RegistrarsHandler } from '../registrars/registrars.handler';
 import { DomainProviderType } from '../registrars/providers/domains.provider.interface';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Injectable()
 export class DomainsService {
@@ -22,12 +23,17 @@ export class DomainsService {
     });
     if (!registrar) throw new NotFoundException('No active registrar found');
 
-    const provider = this.registrarsFactory.get(registrar.name as DomainProviderType);
-    const available = await provider.availability(domainName, registrar);
+    const provider = this.registrarsFactory.get(
+      registrar.name as DomainProviderType,
+    ) as unknown as Record<string, (...args: any[]) => Promise<any>>;
+    const available = (await provider.availability(
+      domainName,
+      registrar,
+    )) as boolean;
     return { domain: domainName, available };
   }
 
-  async findAll(query: PaginationDto, user) {
+  async findAll(query: PaginationDto, user: AuthenticatedRequest['user']) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
@@ -54,7 +60,7 @@ export class DomainsService {
     return { data: domains, total, page, limit };
   }
 
-  async findOne(id: number, user) {
+  async findOne(id: number, user: AuthenticatedRequest['user']) {
     const where = {
       id,
       ...(!hasPermission(user, 'domains', 'read', 'all') && {
@@ -74,7 +80,11 @@ export class DomainsService {
     return domain;
   }
 
-  async update(id: number, updateDomainDto: UpdateDomainDto, user) {
+  async update(
+    id: number,
+    updateDomainDto: UpdateDomainDto,
+    user: AuthenticatedRequest['user'],
+  ) {
     await this.findOne(id, user);
 
     const { nameservers, isLocked, privacy, ...data } = updateDomainDto;
@@ -98,29 +108,33 @@ export class DomainsService {
       });
     }
 
-    return await this.prisma.domain.update({
+    return this.prisma.domain.update({
       where: { id },
       data,
     });
   }
 
-  async renew(id: number, user) {
+  async renew(id: number, user: AuthenticatedRequest['user']) {
     await this.findOne(id, user);
     return this.registrarsHandler.executeAction(id, 'renew');
   }
 
-  async transfer(id: number, authCode: string, user) {
+  async transfer(
+    id: number,
+    authCode: string,
+    user: AuthenticatedRequest['user'],
+  ) {
     await this.findOne(id, user);
     return this.registrarsHandler.executeAction(id, 'transfer', { authCode });
   }
 
-  async getAuthCode(id: number, user) {
+  async getAuthCode(id: number, user: AuthenticatedRequest['user']) {
     await this.findOne(id, user);
     return this.registrarsHandler.executeAction(id, 'code');
   }
 
-  async remove(id: number, user) {
+  async remove(id: number, user: AuthenticatedRequest['user']) {
     await this.findOne(id, user);
-    return await this.prisma.domain.delete({ where: { id } });
+    return this.prisma.domain.delete({ where: { id } });
   }
 }

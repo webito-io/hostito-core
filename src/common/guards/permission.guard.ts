@@ -7,6 +7,13 @@ import {
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../modules/prisma/prisma.service';
 import { PERMISSION_KEY } from '../decorators/permission.decorator';
+import { AuthenticatedRequest } from '../interfaces/request.interface';
+
+interface RequiredPermission {
+  resource: string;
+  action: string;
+  scope: string;
+}
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -16,10 +23,14 @@ export class PermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const required = this.reflector.get(PERMISSION_KEY, context.getHandler());
+    const required = this.reflector.get<RequiredPermission>(
+      PERMISSION_KEY,
+      context.getHandler(),
+    );
     if (!required) return true;
 
-    const { user } = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const { user } = request;
     if (!user) throw new ForbiddenException();
 
     const role = await this.prisma.role.findUnique({
@@ -38,7 +49,6 @@ export class PermissionsGuard implements CanActivate {
 
     if (!has) throw new ForbiddenException('Access denied');
 
-    const request = context.switchToHttp().getRequest();
     request.user.role = role;
     return true;
   }

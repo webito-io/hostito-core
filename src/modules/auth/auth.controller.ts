@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
@@ -6,7 +14,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import {
   ForgotPasswordDto,
   LoginDto,
@@ -18,11 +26,17 @@ import {
 import { AuthResponse, MessageResponse } from './auth.entity';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
+
+interface AuthResult {
+  user: any;
+  access_token: string;
+}
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
@@ -33,7 +47,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async register(@Body() body: RegisterDto) {
-    return await this.authService.register(body);
+    return this.authService.register(body);
   }
 
   @Post('login')
@@ -45,7 +59,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async login(@Body() body: LoginDto) {
-    return await this.authService.login(body.email, body.password);
+    return this.authService.login(body.email, body.password);
   }
 
   @Post('forgot-password')
@@ -56,7 +70,7 @@ export class AuthController {
     type: MessageResponse,
   })
   async forgotPassword(@Body() body: ForgotPasswordDto) {
-    return await this.authService.forgotPassword(body.email);
+    return this.authService.forgotPassword(body.email);
   }
 
   @Post('reset-password')
@@ -67,7 +81,7 @@ export class AuthController {
     type: MessageResponse,
   })
   async resetPassword(@Body() body: ResetPasswordDto) {
-    return await this.authService.resetPassword(body.token, body.password);
+    return this.authService.resetPassword(body.token, body.password);
   }
 
   @Post('verify-email')
@@ -78,7 +92,7 @@ export class AuthController {
     type: MessageResponse,
   })
   async verifyEmail(@Body() body: VerifyEmailDto) {
-    return await this.authService.verifyEmail(body.token);
+    return this.authService.verifyEmail(body.token);
   }
 
   @Post('resend-verification-email')
@@ -89,7 +103,7 @@ export class AuthController {
     type: MessageResponse,
   })
   async resendVerificationEmail(@Body() body: ResendVerificationEmailDto) {
-    return await this.authService.resendVerificationEmail(body.email);
+    return this.authService.resendVerificationEmail(body.email);
   }
 
   @Get('me')
@@ -98,15 +112,15 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user information' })
   @ApiResponse({ status: 200, description: 'Return current user information' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getMe(@Req() req) {
-    return await this.authService.getMe(req.user.id);
+  async getMe(@Req() req: AuthenticatedRequest) {
+    return this.authService.getMe(req.user.id);
   }
 
   @Get('google')
   @UseGuards(PassportAuthGuard('google'))
   @ApiOperation({ summary: 'Start Google OAuth flow' })
   @ApiResponse({ status: 302, description: 'Redirects to Google OAuth' })
-  async googleAuth() {
+  googleAuth() {
     // This route initiates the Google OAuth flow
     // Passport will handle the redirect to Google
   }
@@ -119,9 +133,9 @@ export class AuthController {
     description: 'Google OAuth successful',
     type: AuthResponse,
   })
-  async googleAuthCallback(@Req() req, @Res() res: Response) {
+  googleAuthCallback(@Req() req: Request, @Res() res: Response) {
     // req.user contains the user data from GoogleStrategy
-    const result = req.user;
+    const result = req.user as unknown as AuthResult;
 
     // Redirect to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:7080';
@@ -134,7 +148,7 @@ export class AuthController {
   @UseGuards(PassportAuthGuard('github'))
   @ApiOperation({ summary: 'Start GitHub OAuth flow' })
   @ApiResponse({ status: 302, description: 'Redirects to GitHub OAuth' })
-  async githubAuth() {
+  githubAuth() {
     // This route initiates the GitHub OAuth flow
     // Passport will handle the redirect to GitHub
   }
@@ -147,9 +161,9 @@ export class AuthController {
     description: 'GitHub OAuth successful',
     type: AuthResponse,
   })
-  async githubAuthCallback(@Req() req, @Res() res: Response) {
+  githubAuthCallback(@Req() req: Request, @Res() res: Response) {
     // req.user contains the user data from GithubStrategy
-    const result = req.user;
+    const result = req.user as unknown as AuthResult;
 
     // Redirect to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:7080';

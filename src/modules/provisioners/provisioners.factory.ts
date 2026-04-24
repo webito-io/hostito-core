@@ -15,13 +15,13 @@ export class ProvisionersFactory {
 
   get(provisionerName: ProvisionerType): ProvisionerProvider {
     switch (provisionerName) {
-      case 'cpanel':
+      case ProvisionerType.CPANEL:
         return this.cpanelProvider;
-      case 'directadmin':
+      case ProvisionerType.DIRECTADMIN:
         return this.directadminProvider;
       default:
         throw new BadRequestException(
-          `Unknown provisioner: ${provisionerName}`,
+          `Unknown provisioner: ${provisionerName as string}`,
         );
     }
   }

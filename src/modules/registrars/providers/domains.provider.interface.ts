@@ -3,7 +3,7 @@ import { Domain, Organization, Registrar, User } from '@prisma/client';
 export interface DomainProvisionResult {
   status: 'success' | 'failed';
   message?: string;
-  data?: any;
+  data?: unknown;
 }
 
 export interface DomainProvisioningArgs {
@@ -11,7 +11,7 @@ export interface DomainProvisioningArgs {
   registrar: Registrar;
   organization?: Organization;
   user?: User;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface DomainProvider {

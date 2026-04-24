@@ -1,12 +1,29 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
+export interface CategoryTree {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  parentId: number | null;
+  order: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  children: CategoryTree[];
+}
+
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
     const { parentId, ...data } = createCategoryDto;
@@ -17,7 +34,9 @@ export class CategoriesService {
         where: { id: parentId },
       });
       if (!parent) {
-        throw new NotFoundException(`Parent category with ID ${parentId} not found`);
+        throw new NotFoundException(
+          `Parent category with ID ${parentId} not found`,
+        );
       }
     }
 
@@ -26,7 +45,9 @@ export class CategoriesService {
       where: { slug: data.slug },
     });
     if (existing) {
-      throw new BadRequestException(`Category with slug ${data.slug} already exists`);
+      throw new BadRequestException(
+        `Category with slug ${data.slug} already exists`,
+      );
     }
 
     return this.prisma.category.create({
@@ -51,15 +72,15 @@ export class CategoriesService {
     return { data: categories, total, page, limit };
   }
 
-  async tree() {
+  async tree(): Promise<CategoryTree[]> {
     const allCategories = await this.prisma.category.findMany({
       orderBy: { order: 'asc' },
     });
 
-    const buildTree = (parentId: number | null = null): any[] => {
+    const buildTree = (parentId: number | null = null): CategoryTree[] => {
       return allCategories
-        .filter(cat => cat.parentId === parentId)
-        .map(cat => ({
+        .filter((cat) => cat.parentId === parentId)
+        .map((cat) => ({
           ...cat,
           children: buildTree(cat.id),
         }));
@@ -73,7 +94,7 @@ export class CategoriesService {
       where: { id },
       include: {
         children: {
-          orderBy: { order: 'asc' }
+          orderBy: { order: 'asc' },
         },
         products: true,
       },
@@ -109,7 +130,9 @@ export class CategoriesService {
     });
 
     if (productsCount > 0) {
-      throw new BadRequestException('Cannot delete category with associated products');
+      throw new BadRequestException(
+        'Cannot delete category with associated products',
+      );
     }
 
     return this.prisma.category.delete({

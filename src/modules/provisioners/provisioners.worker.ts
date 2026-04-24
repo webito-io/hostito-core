@@ -3,9 +3,16 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { Job } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { ProvisionerType } from './providers/provisioners.provider.interface';
 import { ProvisionersFactory } from './provisioners.factory';
 
+interface ActionResult {
+  status: string;
+  serviceStatus?: any;
+  username?: string;
+  password?: string;
+}
 export interface ProvisioningJobData {
   serviceId: number;
   actionName: string;
@@ -22,7 +29,9 @@ export class ProvisionersWorker extends WorkerHost {
     super();
   }
 
-  async process(job: Job<ProvisioningJobData>): Promise<any> {
+  async process(
+    job: Job<ProvisioningJobData>,
+  ): Promise<ActionResult | undefined> {
     const { serviceId, actionName, extraArgs } = job.data;
 
     // 1. Fetch relations
@@ -44,15 +53,17 @@ export class ProvisionersWorker extends WorkerHost {
     // 3. Execute
     const provider = this.provisionersFactory.get(
       server.provisioner.name as ProvisionerType,
-    );
+    ) as unknown as Record<string, (args: any) => Promise<ActionResult>>;
 
-    if (typeof provider[actionName] !== 'function') {
+    const action = provider[actionName];
+
+    if (typeof action !== 'function') {
       throw new Error(
         `Action ${actionName} unsupported by provider ${server.provisioner.name}`,
       );
     }
 
-    const result = await provider[actionName]({
+    const result = await action({
       service,
       server,
       provisioner: server.provisioner,
@@ -60,15 +71,18 @@ export class ProvisionersWorker extends WorkerHost {
     });
 
     // 4. Auto-update DB if successful
-    if (result?.status === 'success') {
-      await this.prisma.service.update({
-        where: { id: serviceId },
-        data: {
-          ...(result.serviceStatus && { status: result.serviceStatus }),
-          ...(result.username && { username: result.username }),
-          ...(result.password && { password: result.password }),
-        },
-      });
+    if (result && result.status === 'success') {
+      const updateData: Record<string, unknown> = {};
+      if (result.serviceStatus) updateData.status = result.serviceStatus;
+      if (result.username) updateData.username = result.username;
+      if (result.password) updateData.password = result.password;
+
+      if (Object.keys(updateData).length > 0) {
+        await this.prisma.service.update({
+          where: { id: serviceId },
+          data: updateData as Prisma.ServiceUpdateInput,
+        });
+      }
     }
 
     // 5. Emit event for logging/notifications
@@ -84,5 +98,5 @@ export class ProvisionersWorker extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
-  onFailed(job: Job, error: Error) {}
+  onFailed(_job: Job, _error: Error) {}
 }

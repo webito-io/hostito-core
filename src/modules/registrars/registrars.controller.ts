@@ -8,7 +8,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { PermissionsGuard } from 'src/common/guards/permission.guard';

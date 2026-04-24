@@ -5,37 +5,50 @@ import { Test } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
-import { create } from 'domain';
-import { organizationSelect } from '../organizations/selects/organization.select';
 
 jest.mock('bcrypt', () => ({
   compare: jest.fn(),
   hash: jest.fn(),
 }));
 
+interface MockPrismaService {
+  user: {
+    findUnique: jest.Mock;
+    create: jest.Mock;
+  };
+  currency: {
+    findFirst: jest.Mock;
+  };
+  setting: {
+    findUnique: jest.Mock;
+  };
+  organization: {
+    create: jest.Mock;
+  };
+}
+
 describe('AuthService', () => {
   let service: AuthService;
-  let prismaMock: any;
-  let jwtMock: any;
-  let eventEmitterMock: any;
+  let prismaMock: MockPrismaService;
+  let jwtMock: { sign: jest.Mock };
+  let eventEmitterMock: { emit: jest.Mock };
 
   beforeEach(async () => {
-
     prismaMock = {
       user: {
         findUnique: jest.fn(),
-        create: jest.fn()
+        create: jest.fn(),
       },
       currency: {
-        findFirst: jest.fn().mockResolvedValue({ id: 1, code: 'USD' })
+        findFirst: jest.fn().mockResolvedValue({ id: 1, code: 'USD' }),
       },
       setting: {
         // default role
-        findUnique: jest.fn().mockResolvedValue({ value: 2 })
+        findUnique: jest.fn().mockResolvedValue({ value: 2 }),
       },
       organization: {
-        create : jest.fn().mockResolvedValue({ id: 1, name: 'Org Name' })
-      }
+        create: jest.fn().mockResolvedValue({ id: 1, name: 'Org Name' }),
+      },
     };
 
     jwtMock = {
@@ -56,9 +69,7 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-
   });
-
 
   describe('login', () => {
     it('should return user and token when credentials are valid', async () => {
@@ -81,14 +92,21 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if user not found', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
-      await expect(service.login('x@x.com', 'pass')).rejects.toThrow(UnauthorizedException);
+      await expect(service.login('x@x.com', 'pass')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if password is wrong', async () => {
-      prismaMock.user.findUnique.mockResolvedValue({ id: 1, password: 'hashed' });
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 1,
+        password: 'hashed',
+      });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(service.login('test@example.com', 'wrongpass')).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.login('test@example.com', 'wrongpass'),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -104,14 +122,16 @@ describe('AuthService', () => {
 
       prismaMock.user.findUnique.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+
       prismaMock.user.create.mockResolvedValue(mockUser);
 
-      const result = await service.register({ email: 'test@example.com', password: 'password' });
+      const result = await service.register({
+        email: 'test@example.com',
+        password: 'password',
+      });
 
       expect(result.access_token).toBe('mock-token');
       expect(result.user.password).toBeUndefined();
     });
   });
-
-
 });

@@ -8,7 +8,6 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
-  DefaultValuePipe,
   Query,
   Req,
 } from '@nestjs/common';
@@ -27,6 +26,7 @@ import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { OptionalAuthGuard } from 'src/common/guards/optional.guard';
 import { CurrencyEntity } from './entities/currency.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @ApiTags('Currencies')
 @Controller('currencies')
@@ -44,7 +44,7 @@ export class CurrenciesController {
     type: CurrencyEntity,
   })
   async create(@Body() createCurrencyDto: CreateCurrencyDto) {
-    return await this.currenciesService.create(createCurrencyDto);
+    return this.currenciesService.create(createCurrencyDto);
   }
 
   @UseGuards(OptionalAuthGuard)
@@ -56,8 +56,11 @@ export class CurrenciesController {
     description: 'Return all currencies',
     type: [CurrencyEntity],
   })
-  async findAll(@Query() query: PaginationDto, @Req() req) {
-    return await this.currenciesService.findAll(query, req.user);
+  async findAll(
+    @Query() query: PaginationDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.currenciesService.findAll(query, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -72,7 +75,7 @@ export class CurrenciesController {
   })
   @ApiResponse({ status: 404, description: 'Currency not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.currenciesService.findOne(id);
+    return this.currenciesService.findOne(id);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -90,7 +93,7 @@ export class CurrenciesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCurrencyDto: UpdateCurrencyDto,
   ) {
-    return await this.currenciesService.update(id, updateCurrencyDto);
+    return this.currenciesService.update(id, updateCurrencyDto);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -101,6 +104,6 @@ export class CurrenciesController {
   @ApiResponse({ status: 200, description: 'Currency deleted successfully' })
   @ApiResponse({ status: 404, description: 'Currency not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
-    return await this.currenciesService.remove(id);
+    return this.currenciesService.remove(id);
   }
 }

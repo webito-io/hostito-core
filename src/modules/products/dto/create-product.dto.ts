@@ -13,11 +13,19 @@ import { BillingCycle, ProductType, VariantAction } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateVariantDto {
-  @ApiProperty({ enum: VariantAction, description: 'Variant action type', example: 'RECURRING' })
+  @ApiProperty({
+    enum: VariantAction,
+    description: 'Variant action type',
+    example: 'RECURRING',
+  })
   @IsEnum(VariantAction)
   action: VariantAction;
 
-  @ApiProperty({ enum: BillingCycle, description: 'Billing cycle', example: 'MONTHLY' })
+  @ApiProperty({
+    enum: BillingCycle,
+    description: 'Billing cycle',
+    example: 'MONTHLY',
+  })
   @IsEnum(BillingCycle)
   cycle: BillingCycle;
 
@@ -27,7 +35,10 @@ export class CreateVariantDto {
 }
 
 export class CreateProductDto {
-  @ApiProperty({ description: 'Name of the product', example: 'Shared Hosting' })
+  @ApiProperty({
+    description: 'Name of the product',
+    example: 'Shared Hosting',
+  })
   @IsString()
   name: string;
 
@@ -45,7 +56,11 @@ export class CreateProductDto {
   @IsNumber()
   categoryId?: number;
 
-  @ApiProperty({ enum: ProductType, description: 'Type of the product', example: 'SERVICE' })
+  @ApiProperty({
+    enum: ProductType,
+    description: 'Type of the product',
+    example: 'SERVICE',
+  })
   @IsEnum(ProductType)
   type: ProductType;
 
@@ -54,17 +69,28 @@ export class CreateProductDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiProperty({ description: 'ID of the server (for provisioning)', required: false, example: 1 })
+  @ApiProperty({
+    description: 'ID of the server (for provisioning)',
+    required: false,
+    example: 1,
+  })
   @IsOptional()
   @IsNumber()
   serverId?: number;
 
-  @ApiProperty({ description: 'TLD for domain products (e.g. .com, .net)', required: false, example: '.com' })
+  @ApiProperty({
+    description: 'TLD for domain products (e.g. .com, .net)',
+    required: false,
+    example: '.com',
+  })
   @IsOptional()
   @IsString()
   tld?: string;
 
-  @ApiProperty({ description: 'Provisioning config (e.g. cpanel package, ram, disk)', required: false })
+  @ApiProperty({
+    description: 'Provisioning config (e.g. cpanel package, ram, disk)',
+    required: false,
+  })
   @IsOptional()
   @IsObject()
   config?: object;

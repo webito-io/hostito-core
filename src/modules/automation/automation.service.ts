@@ -7,13 +7,12 @@ import { TaxesCalculator } from '../taxes/taxes.calculator';
 
 @Injectable()
 export class AutomationService {
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly outboxService: OutboxService,
     private readonly eventEmitter: EventEmitter2,
     private readonly taxesCalculator: TaxesCalculator,
-  ) { }
+  ) {}
 
   /**
    * Runs every day at midnight to process billing and provisioning automation
@@ -34,7 +33,6 @@ export class AutomationService {
   }
 
   async cancel() {
-
     const targetTime = new Date();
     targetTime.setHours(targetTime.getHours() - 1);
 
@@ -43,16 +41,16 @@ export class AutomationService {
         where: {
           status: 'PENDING',
           createdAt: {
-            lt: targetTime
-          }
+            lt: targetTime,
+          },
         },
         data: {
-          status: 'FAILED'
-        }
-      })
-    })
+          status: 'FAILED',
+        },
+      });
+    });
 
-    return transaction
+    return transaction;
   }
 
   /**
@@ -91,7 +89,10 @@ export class AutomationService {
     const countries = [...new Set(services.map((s) => s.organization.country))];
     const taxRateMap = new Map<string | null, number>();
     for (const country of countries) {
-      taxRateMap.set(country ?? null, await this.taxesCalculator.getRate(country));
+      taxRateMap.set(
+        country ?? null,
+        await this.taxesCalculator.getRate(country),
+      );
     }
 
     const invoiceIds = await this.prisma.$transaction(async (tx) => {
@@ -147,7 +148,6 @@ export class AutomationService {
    * Safely dispatches to provisioner using Outbox pattern
    */
   async suspensions() {
-
     // 1 Day grace period
     const overdueLimit = new Date();
     overdueLimit.setDate(overdueLimit.getDate() - 1);
@@ -161,28 +161,35 @@ export class AutomationService {
       },
       include: {
         product: true,
-      }
+      },
     });
 
     await this.prisma.$transaction(async (tx) => {
       await tx.service.updateMany({
-        where: { id: { in: overdueServices.map(s => s.id) } },
+        where: { id: { in: overdueServices.map((s) => s.id) } },
         data: { status: 'SUSPENDED' },
       });
 
-      await this.outboxService.createMany(tx, overdueServices.map(s => ({
-        type: 'provisioner',
-        queue: 'provisioners',
-        jobName: 'execute-action',
-        payload: { serviceId: s.id, actionName: 'suspend', extraArgs: { reason: 'OVERDUE' } },
-      })));
+      await this.outboxService.createMany(
+        tx,
+        overdueServices.map((s) => ({
+          type: 'provisioner',
+          queue: 'provisioners',
+          jobName: 'execute-action',
+          payload: {
+            serviceId: s.id,
+            actionName: 'suspend',
+            extraArgs: { reason: 'OVERDUE' },
+          },
+        })),
+      );
     });
 
     for (const service of overdueServices) {
       // 3. Emit event for logging/notifications
       this.eventEmitter.emit('service.suspended', {
         serviceId: service.id,
-        reason: 'OVERDUE'
+        reason: 'OVERDUE',
       });
     }
   }

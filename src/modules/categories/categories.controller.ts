@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags,
+  ApiOkResponse,
+  ApiCreatedResponse,
+} from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -7,12 +24,16 @@ import { AuthGuard } from '../auth/auth.guard';
 import { PermissionsGuard } from 'src/common/guards/permission.guard';
 import { RequirePermission } from 'src/common/decorators/permission.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { CategoryEntity, CategoryPaginationResponse, CategoryTreeEntity } from './entities/category-response.entity';
+import {
+  CategoryEntity,
+  CategoryPaginationResponse,
+  CategoryTreeEntity,
+} from './entities/category-response.entity';
 
 @ApiTags('Categories')
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) { }
+  constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
   @ApiBearerAuth()
@@ -51,7 +72,10 @@ export class CategoriesController {
   @RequirePermission('categories', 'update', 'all')
   @ApiOperation({ summary: 'Update an existing category' })
   @ApiOkResponse({ type: CategoryEntity })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateCategoryDto: UpdateCategoryDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+  ) {
     return this.categoriesService.update(id, updateCategoryDto);
   }
 

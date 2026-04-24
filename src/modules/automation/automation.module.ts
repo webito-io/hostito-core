@@ -7,4 +7,4 @@ import { TaxesModule } from '../taxes/taxes.module';
   providers: [AutomationService],
   exports: [AutomationService],
 })
-export class AutomationModule { }
+export class AutomationModule {}

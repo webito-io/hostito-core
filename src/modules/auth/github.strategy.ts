@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-github2';
+import { Strategy, Profile } from 'passport-github2';
 import { AuthService, GithubUser } from './auth.service';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
+    profile: Profile,
   ): Promise<any> {
     const { username, emails, photos, id } = profile;
 
@@ -26,15 +26,16 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
 
     const user: GithubUser = {
       githubId: id,
-      email,
-      firstName: profile.name?.givenName || username,
-      lastName: profile.name?.familyName,
+      email: email || '',
+      firstName: username || '',
+      lastName: '',
       picture: photos?.[0]?.value,
       accessToken,
     };
 
     // Find or create user in database
-    const existingUser = await this.authService.findOrCreateUserWithGithub(user);
+    const existingUser =
+      await this.authService.findOrCreateUserWithGithub(user);
 
     return existingUser;
   }

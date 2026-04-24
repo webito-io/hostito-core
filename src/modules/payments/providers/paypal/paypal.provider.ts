@@ -4,27 +4,30 @@ export class PaypalProvider {
   constructor() {}
 
   // TODO: Implement initiate and verify methods
-  // TODO: Vibe Coded, should be check
 
   async initiate({
-    gateway,
-    amount,
-    currency,
-    transactionId,
+    _gateway,
+    _amount,
+    _currency,
+    _transactionId,
   }: {
-    gateway: PaymentGateway;
-    amount: number;
-    currency: string;
-    transactionId: number;
-  }) {}
+    _gateway: PaymentGateway;
+    _amount: number;
+    _currency: string;
+    _transactionId: number;
+  }) {
+    return Promise.resolve({});
+  }
 
-  async verify(transaction: Transaction, data) {}
+  async verify(_transaction: Transaction, _data: any) {
+    return Promise.resolve({});
+  }
 
-  async webhook(gateway: PaymentGateway, headers: any, rawBody: Buffer) {
+  async webhook(_gateway: PaymentGateway, _headers: any, _rawBody: Buffer) {
     // TODO: Implement PayPal webhook verification
-    return {
+    return Promise.resolve({
       status: 'success',
       transactionId: undefined as number | undefined,
-    };
+    });
   }
 }

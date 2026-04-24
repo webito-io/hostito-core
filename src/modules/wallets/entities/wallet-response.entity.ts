@@ -1,10 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class WalletBalanceResponse {
-  @ApiProperty({ example: 100.5, description: 'Current balance of the organization' })
+  @ApiProperty({
+    example: 100.5,
+    description: 'Current balance of the organization',
+  })
   balance: number;
 
-  @ApiProperty({ example: 1, description: 'ID of the currency used for the balance' })
+  @ApiProperty({
+    example: 1,
+    description: 'ID of the currency used for the balance',
+  })
   currencyId: number;
 }
 

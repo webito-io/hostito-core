@@ -7,4 +7,4 @@ import { OutboxProcessor } from './outbox.processor';
   providers: [OutboxService, OutboxProcessor],
   exports: [OutboxService],
 })
-export class OutboxModule { }
+export class OutboxModule {}

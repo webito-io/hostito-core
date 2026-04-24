@@ -26,6 +26,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
 import { ProductsService } from './products.service';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @ApiTags('Products')
 @Controller('products')
@@ -43,7 +44,7 @@ export class ProductsController {
     type: ProductEntity,
   })
   async create(@Body() createProductDto: CreateProductDto) {
-    return await this.productsService.create(createProductDto);
+    return this.productsService.create(createProductDto);
   }
 
   @UseGuards(OptionalAuthGuard)
@@ -55,8 +56,11 @@ export class ProductsController {
     description: 'Return all products',
     type: [ProductEntity],
   })
-  async findAll(@Query() query: PaginationDto, @Req() req) {
-    return await this.productsService.findAll(query, req.user);
+  async findAll(
+    @Query() query: PaginationDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.productsService.findAll(query, req.user);
   }
 
   @UseGuards(OptionalAuthGuard)
@@ -69,8 +73,11 @@ export class ProductsController {
     type: ProductEntity,
   })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return await this.productsService.findOne(id, req.user);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.productsService.findOne(id, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -87,9 +94,9 @@ export class ProductsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProductDto: UpdateProductDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return await this.productsService.update(id, updateProductDto, req.user);
+    return this.productsService.update(id, updateProductDto, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -99,7 +106,10 @@ export class ProductsController {
   @ApiOperation({ summary: 'Delete a product by ID' })
   @ApiResponse({ status: 200, description: 'Product deleted successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return await this.productsService.remove(id, req.user);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.productsService.remove(id, req.user);
   }
 }

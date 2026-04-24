@@ -11,4 +11,4 @@ import { AuditLogsModule } from '../audit-logs/audit-logs.module';
   controllers: [InvoicesController],
   providers: [InvoicesService, InvoicesListener],
 })
-export class InvoicesModule { }
+export class InvoicesModule {}

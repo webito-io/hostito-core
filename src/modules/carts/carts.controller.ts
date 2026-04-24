@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -24,6 +25,7 @@ import { CartItemDto } from './dto/cart-item.dto';
 import { AddDomainDto } from './dto/add-domain.dto';
 import { CartEntity, CartItemEntity } from './entities/cart.entity';
 import { ApplyCouponDto } from './dto/apply-coupon.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @ApiTags('Carts')
 @Controller('carts')
@@ -39,34 +41,45 @@ export class CartsController {
     description: 'Item added successfully',
     type: CartItemEntity,
   })
-  async create(@Body() createCartDto: CartItemDto, @Req() req) {
-    return await this.cartsService.add(createCartDto, req.user);
+  async create(
+    @Body() createCartDto: CartItemDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.cartsService.add(createCartDto, req.user);
   }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('/domain')
-  @ApiOperation({ summary: 'Add domain to cart (resolves TLD pricing automatically)' })
+  @ApiOperation({
+    summary: 'Add domain to cart (resolves TLD pricing automatically)',
+  })
   @ApiResponse({
     status: 201,
     description: 'Domain added to cart',
     type: CartItemEntity,
   })
-  async addDomain(@Body() body: AddDomainDto, @Req() req) {
-    return await this.cartsService.addDomain(body.domain, req.user);
+  async addDomain(
+    @Body() body: AddDomainDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.cartsService.addDomain(body.domain, req.user);
   }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Post('')
+  @Get('')
   @ApiOperation({ summary: 'Get current cart (optionally apply a coupon)' })
   @ApiResponse({
     status: 200,
     description: 'Return current cart',
     type: CartEntity,
   })
-  async getCart(@Req() req, @Body() body: ApplyCouponDto) {
-    return await this.cartsService.findOne(req.user, body.couponCode);
+  async getCart(
+    @Req() req: AuthenticatedRequest,
+    @Query() query: ApplyCouponDto,
+  ) {
+    return this.cartsService.findOne(req.user, query.couponCode);
   }
 
   @UseGuards(AuthGuard)
@@ -81,9 +94,9 @@ export class CartsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCartDto: CartItemDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return await this.cartsService.update(id, updateCartDto, req.user);
+    return this.cartsService.update(id, updateCartDto, req.user);
   }
 
   @UseGuards(AuthGuard)
@@ -91,8 +104,11 @@ export class CartsController {
   @Delete('/cart-item/:id')
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiResponse({ status: 200, description: 'Item removed successfully' })
-  async remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return await this.cartsService.remove(id, req.user);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.cartsService.remove(id, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -102,6 +118,6 @@ export class CartsController {
   @ApiOperation({ summary: 'Delete all carts (Admin)' })
   @ApiResponse({ status: 200, description: 'All carts deleted' })
   async removeAll() {
-    return await this.cartsService.removeAll();
+    return this.cartsService.removeAll();
   }
 }

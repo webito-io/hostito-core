@@ -29,7 +29,10 @@ export class SettingsController {
     type: [SettingEntity],
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden — insufficient permissions' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden — insufficient permissions',
+  })
   async get() {
     return await this.settingsService.get();
   }
@@ -56,7 +59,10 @@ export class SettingsController {
     type: SettingEntity,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden — insufficient permissions' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden — insufficient permissions',
+  })
   async update(
     @Param('key') key: string,
     @Body() updateSettingDto: UpdateSettingDto,

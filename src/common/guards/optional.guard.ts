@@ -1,6 +1,7 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { AuthenticatedRequest } from '../interfaces/request.interface';
 
 @Injectable()
 export class OptionalAuthGuard extends AuthGuard('jwt') {
@@ -8,14 +9,14 @@ export class OptionalAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  async canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
       await super.canActivate(context);
     } catch {
       return true;
     }
 
-    const req = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
     if (!req.user) return true;
 
     const role = await this.prisma.role.findUnique({
@@ -23,11 +24,16 @@ export class OptionalAuthGuard extends AuthGuard('jwt') {
       include: { permissions: true },
     });
 
-    req.user.role = role;
+    if (role) {
+      req.user.role = {
+        ...role,
+        permissions: role.permissions || [],
+      };
+    }
     return true;
   }
 
-  handleRequest(err, user) {
-    return user || null;
+  handleRequest<TUser = any>(err: unknown, user: TUser): TUser {
+    return user || (null as unknown as TUser);
   }
 }

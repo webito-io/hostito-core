@@ -11,7 +11,7 @@ export class AuthGuard extends NestAuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err, user) {
+  handleRequest<TUser = any>(err: unknown, user: TUser): TUser {
     if (err || !user) throw new UnauthorizedException();
     return user;
   }

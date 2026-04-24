@@ -25,6 +25,7 @@ import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { OrganizationsService } from './organizations.service';
 import { OrganizationEntity } from './entities/organization.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @ApiTags('Organizations')
 @Controller('organizations')
@@ -42,7 +43,7 @@ export class OrganizationsController {
     type: OrganizationEntity,
   })
   async create(@Body() createOrganizationDto: CreateOrganizationDto) {
-    return await this.organizationsService.create(createOrganizationDto);
+    return this.organizationsService.create(createOrganizationDto);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -55,8 +56,11 @@ export class OrganizationsController {
     description: 'Return all organizations',
     type: [OrganizationEntity],
   })
-  async findAll(@Query() query: PaginationDto, @Req() req) {
-    return await this.organizationsService.findAll(query, req.user);
+  async findAll(
+    @Query() query: PaginationDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.organizationsService.findAll(query, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -70,8 +74,11 @@ export class OrganizationsController {
     type: OrganizationEntity,
   })
   @ApiResponse({ status: 404, description: 'Organization not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return await this.organizationsService.findOne(id, req.user);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.organizationsService.findOne(id, req.user);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -89,7 +96,7 @@ export class OrganizationsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrganizationDto: UpdateOrganizationDto,
   ) {
-    return await this.organizationsService.update(id, updateOrganizationDto);
+    return this.organizationsService.update(id, updateOrganizationDto);
   }
 
   @UseGuards(AuthGuard, PermissionsGuard)
@@ -102,7 +109,10 @@ export class OrganizationsController {
     description: 'Organization deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Organization not found' })
-  async remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return await this.organizationsService.remove(id, req.user);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.organizationsService.remove(id, req.user);
   }
 }

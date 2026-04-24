@@ -61,6 +61,7 @@ export class NotificationsWorker extends WorkerHost {
     const subject = Handlebars.compile(template.subject)(notification);
 
     const result = await provider.send({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       config: providerRecord.config as any,
       to: notification.to,
       subject,
@@ -87,7 +88,7 @@ export class NotificationsWorker extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
-  onFailed(job: Job, error: Error) {
+  onFailed(_job: Job, _error: Error) {
     // Handle failure
   }
 }

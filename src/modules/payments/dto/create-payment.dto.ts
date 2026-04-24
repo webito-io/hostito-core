@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsNumber } from 'class-validator';
 
 export class CreatePaymentDto {
   @ApiProperty({ description: 'Transaction ID' })

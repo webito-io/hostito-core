@@ -35,7 +35,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   /**
    * Register a new user
@@ -120,7 +120,8 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    if (!user.password) throw new UnauthorizedException('Please use OAuth to login');
+    if (!user.password)
+      throw new UnauthorizedException('Please use OAuth to login');
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
@@ -197,8 +198,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    if (!user.password) throw new UnauthorizedException('Please use OAuth to login');
-
+    if (!user.password)
+      throw new UnauthorizedException('Please use OAuth to login');
 
     const isSame = await bcrypt.compare(password, user.password);
     if (isSame) {
@@ -397,7 +398,9 @@ export class AuthService {
 
     // GitHub OAuth requires email - if not provided, throw error
     if (!email) {
-      throw new UnauthorizedException('GitHub email not available. Please make your email public in GitHub settings.');
+      throw new UnauthorizedException(
+        'GitHub email not available. Please make your email public in GitHub settings.',
+      );
     }
 
     // Check if user exists by githubId
